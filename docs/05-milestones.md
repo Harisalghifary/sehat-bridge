@@ -44,8 +44,8 @@ Scaffolding
 - [ ] Frontend: `create-next-app` with **pnpm** (TypeScript, App Router,
       Tailwind, ESLint), `output: "standalone"`, `.nvmrc` (Node 20), one
       placeholder page
-- [ ] `docker-compose.yml`: postgres:16, redis:7, minio + bucket/CORS init,
-      mailpit, backend, frontend, caddy, `mock-satusehat` stub
+- [ ] `docker-compose.yml`: postgres:16, redis:7, minio (Chainguard build) +
+      bucket/CORS bootstrap, mailpit, backend, frontend, caddy, `mock-satusehat` stub
 - [ ] Caddy: `/` → frontend:3000, `/api/*` → backend:8000, no path rewriting
 - [ ] MinIO CORS configured for the site origin (`POST`, `GET`, presigned form)
 - [ ] `Makefile`: `up down logs migrate tenant seed test lint fmt worker demo screenshots`

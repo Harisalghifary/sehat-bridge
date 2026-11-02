@@ -356,6 +356,32 @@ replace the working tree with the monorepo described here. Preserve history.
 
 ---
 
+## ADR-018 — Chainguard MinIO image and S3-API bucket bootstrap
+
+**Context:** In September 2026 MinIO removed its community container images from
+Docker Hub, and Quay began requiring authentication. `minio/minio` and `minio/mc`
+no longer pull on a clean machine, so the original `mc`-based init container
+cannot run.
+
+**Decision:** Use `cgr.dev/chainguard/minio`, pinned by digest and running as uid
+65532, with a one-shot `busybox` job that fixes volume ownership first. Replace
+the `mc` init container with `python -m app.init_storage`, which creates the
+bucket and applies the CORS policy through the S3 API using boto3 from the
+existing backend image.
+
+**Consequences:**
+- The stack pulls on a clean machine without registry credentials.
+- Bucket bootstrap is idempotent and works against any S3-compatible provider.
+- Chainguard's rolling build is re-pinned deliberately; a digest pin does not
+  receive updates on its own.
+- The backend image is now also the init image, so it must build before
+  `minio-init` runs (handled by `depends_on`).
+- MinIO stays an implementation detail; nothing in the application imports it.
+
+**Status:** Accepted.
+
+---
+
 ## Deferred decisions (explicitly not decided now)
 
 | Topic | Trigger to revisit |

@@ -442,7 +442,7 @@ Versions (pinned in lockfiles):
 | Tailwind CSS | 4.x |
 | PostgreSQL | 16 |
 | Redis | 7 |
-| MinIO | latest stable, pinned by digest in compose |
+| MinIO | Chainguard build, pinned by digest (community images were removed in Sep 2026) |
 
 Rules:
 - `pnpm` is the only package manager for `frontend/`; no `npm install` (it would
