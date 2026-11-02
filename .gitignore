@@ -1,2 +1,26 @@
-/node_modules
-/dist
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+coverage/
+pnpm-debug.log*
+
+# Local state
+.DS_Store
+*.log
+/tmp/
+backend/sehat.db

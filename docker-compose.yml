@@ -1,0 +1,162 @@
+name: sehat-bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sehat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sehat}
+      POSTGRES_DB: ${POSTGRES_DB:-sehat}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sehat} -d ${POSTGRES_DB:-sehat}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-sehat}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-sehat-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-sehat}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-sehat-secret}
+      MINIO_BUCKET: ${MINIO_BUCKET:-sehat-bridge}
+    entrypoint: ["/bin/sh", "/config/init.sh"]
+    volumes:
+      - ./compose/minio:/config:ro
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  mock-satusehat:
+    build:
+      context: ./tools/mock-satusehat
+    environment:
+      MOCK_MODE: mock
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=2).status==200 else 1)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      ENV: ${ENV:-dev}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sehat}:${POSTGRES_PASSWORD:-sehat}@postgres:5432/${POSTGRES_DB:-sehat}
+      REDIS_DSN: redis://redis:6379/0
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-sehat}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-sehat-secret}
+      MINIO_BUCKET: ${MINIO_BUCKET:-sehat-bridge}
+      SITE_URL: ${SITE_URL:-http://localhost:8080}
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-dev-only-change-me-32-bytes-minimum}
+      SATUSEHAT_MODE: ${SATUSEHAT_MODE:-mock}
+      SATUSEHAT_MOCK_URL: http://mock-satusehat:8090
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2).status==200 else 1)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_BASE_URL: http://backend:8000
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:8080}
+    environment:
+      API_BASE_URL: http://backend:8000
+      NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:8080}
+      REDIS_DSN: redis://redis:6379/0
+      SESSION_SECRET: ${SESSION_SECRET:-dev-only-session-change-me}
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+
+volumes:
+  pgdata:
+  miniodata:
+  caddydata:
+  caddyconfig:

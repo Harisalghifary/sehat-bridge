@@ -1,0 +1,30 @@
+{
+	admin off
+}
+
+:80 {
+	encode zstd gzip
+
+	# JSON API and its docs. Everything else is the Next.js app, including its
+	# BFF route handlers under /api/session and /api/ping.
+	@backend path /api/v1/* /api/docs /api/docs/* /api/openapi.json
+	handle @backend {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
