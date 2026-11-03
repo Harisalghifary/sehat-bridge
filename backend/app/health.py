@@ -67,6 +67,14 @@ async def live() -> dict[str, str]:
     return {"status": "ok", "version": settings.version}
 
 
+@router.get("/public/health")
+@router.get("/api/v1/public/health")
+async def public_health() -> dict[str, str]:
+    """Minimal, unauthenticated status for the marketing site."""
+    settings = get_settings()
+    return {"status": "ok", "version": settings.version}
+
+
 @router.get("/health/ready")
 @router.get("/api/v1/health/ready")
 async def ready(request: Request, response: Response) -> dict[str, object]:

@@ -11,12 +11,12 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M5 — integrasi SATUSEHAT (mock-first).** The integration pipeline works end to
-end without Kemenkes approval: encrypted per-tenant credentials, connection test,
-a transactional outbox, a fair resumable worker with bounded retries, and
-idempotent resource mappings. `SatusehatPort` has `mock` (default) and `live`
-adapters, selected only by configuration. The product UI follows in M6–M10 (see
-`docs/05-milestones.md`).
+**M6 — situs pemasaran.** The public site is live with original Indonesian
+copy: beranda, solusi, integrasi, demo, tentang, FAQ, and privasi. It uses the
+shared design tokens, `next/font`, per-page metadata and OG images, JSON-LD, a
+working lead form through the Next.js BFF, and the independence disclaimer.
+Lighthouse mobile: Performance 98, Accessibility 100, SEO 100. The faskes app
+follows in M7–M10 (see `docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema
@@ -95,6 +95,8 @@ Detail: `docs/02-architecture.md` dan `docs/07-adrs.md`.
 |---|---|---|
 | GET | `/api/v1/health/live` | liveness |
 | GET | `/api/v1/health/ready` | status postgres, redis, minio |
+| GET | `/api/v1/public/health` | status ringkas untuk situs publik |
+| POST | `/api/v1/leads` | formulir demo (rate limited, honeypot) |
 | GET | `/api/docs` | Swagger UI (mode dev) |
 
 Kontrak lengkap ada di `docs/04-api-spec.md`; sumber kebenaran adalah OpenAPI.

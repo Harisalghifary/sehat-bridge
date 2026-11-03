@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     refresh_limit: int = 30
     refresh_window_seconds: int = 3600
 
+    leads_ip_limit: int = 5
+    leads_global_limit: int = 100
+
     @property
     def is_prod(self) -> bool:
         return self.env == "prod"

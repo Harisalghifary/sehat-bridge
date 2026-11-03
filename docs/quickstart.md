@@ -12,6 +12,10 @@ make seed
 
 Open <http://localhost:8080>.
 
+The public site has seven pages: `/`, `/solusi`, `/integrasi`, `/demo`,
+`/tentang`, `/faq`, and `/privasi`. The demo form writes to the backend lead
+table (with honeypot, timing, and rate-limit checks) and is rate limited per IP.
+
 Postgres is published on host port **55432** (5432 is commonly occupied by a
 local install). The container still listens on 5432 internally.
 

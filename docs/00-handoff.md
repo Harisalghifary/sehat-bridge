@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-04
-Status: **M5 complete — SATUSEHAT mock pipeline verified**
-Next action: **M6 (marketing site), after your go-ahead**
+Status: **M6 complete — marketing site verified**
+Next action: **M7 (faskes app), after your go-ahead**
 
 ## 1. What this project is
 
@@ -175,19 +175,37 @@ data model — not a UI addition.
 - Secrets verified absent from responses, audit metadata, and captured logs.
 - 9 integration tests + 7 unit tests; suite now 26 unit and 41 integration.
 
-## 6. Next action — M6
+### M6 — marketing site
+
+- Design tokens and type scale live in `app/globals.css`; Plus Jakarta Sans via
+  `next/font`; reduced-motion and visible focus styles are global.
+- Marketing shell: sticky nav with a focus-trapped mobile dialog, footer with
+  contact and disclaimer, skip link, and `(marketing)` route group.
+- Seven pages: `/`, `/solusi`, `/integrasi`, `/demo`, `/tentang`, `/faq`,
+  `/privasi`, plus branded 404 and 500 and a temporary `/masuk`.
+- Product visuals are literal HTML UI compositions labelled as illustrations —
+  no stock photos, no fake customer logos or testimonials.
+- Per-page metadata, canonical URLs, `sitemap.ts`, `robots.ts`, JSON-LD
+  `Organization` + `SoftwareApplication`, and `next/og` images for every page.
+- `POST /api/lead` (Next route handler) forwards to `/api/v1/leads`; the backend
+  re-checks the honeypot and timing (`< 3 s`), rate limits per IP (5/h) and
+  globally (100/h), and updates duplicate email+facility leads within 24 h.
+- 6 lead integration tests; suite now 27 unit and 47 integration.
+- Lighthouse mobile on the running stack: Performance 98, Accessibility 100,
+  SEO 100, CLS 0. All six content pages also score 100 for accessibility/SEO.
+
+## 6. Next action — M7
 
 ```bash
-make up                  # build + start (includes mock-satusehat)
-make test                # unit + frontend
-make test-integration    # needs postgres, redis, minio, mock
-make integration-demo    # M5 gate
-git add -A && git commit -m "feat(m5): SATUSEHAT mock-first adapter and outbox"
+make up
+make test
+make test-integration
+git add -A && git commit -m "feat(m6): marketing site and public lead capture"
 git push origin main
 ```
 
-M6 is the marketing site (Indonesian copy, no copied dhealth assets). Stop after
-its gate and review before M7.
+M7 is the faskes app: cookie session BFF, login, dashboard, files, members,
+integration, and profile pages. Stop after its gate and review before M8.
 
 ## 7. Open questions (non-blocking)
 

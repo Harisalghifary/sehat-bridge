@@ -15,6 +15,14 @@ async def test_live_alias_under_api_prefix(client: AsyncClient) -> None:
     assert response.json()["version"]
 
 
+async def test_public_health_is_minimal(client: AsyncClient) -> None:
+    for path in ("/public/health", "/api/v1/public/health"):
+        response = await client.get(path)
+        assert response.status_code == 200
+        assert response.json()["status"] == "ok"
+        assert "checks" not in response.json()
+
+
 async def test_ready_reports_each_dependency(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

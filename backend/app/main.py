@@ -21,6 +21,7 @@ from app.errors import (
 from app.files.router import router as files_router
 from app.health import router as health_router
 from app.integrations.satusehat.router import router as satusehat_router
+from app.leads.router import router as leads_router
 from app.tenancy.middleware import TenantMiddleware
 from app.users.router import router as users_router
 
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(users_router)
     app.include_router(files_router)
     app.include_router(satusehat_router)
+    app.include_router(leads_router)
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_middleware(TenantMiddleware)
