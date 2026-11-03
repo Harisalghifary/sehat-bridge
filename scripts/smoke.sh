@@ -8,11 +8,24 @@ fail() { printf '[fail] %s\n' "$1"; exit 1; }
 
 command -v curl >/dev/null || fail "curl is required"
 
+printf 'waiting for %s\n' "$BASE"
+for _ in $(seq 1 45); do
+  if curl -sf -o /dev/null "$BASE/" 2>/dev/null; then
+    break
+  fi
+  sleep 2
+done
+
 status=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/")
 [ "$status" = "200" ] || fail "marketing page returned $status"
 pass "frontend serves / through Caddy"
 
-curl -fsS "$BASE/api/v1/health/ready" -o /tmp/sb-ready.json || fail "readiness endpoint unavailable"
+for _ in $(seq 1 45); do
+  code=$(curl -s -o /tmp/sb-ready.json -w '%{http_code}' "$BASE/api/v1/health/ready" 2>/dev/null || true)
+  [ "$code" = "200" ] && break
+  sleep 2
+done
+[ "$code" = "200" ] || fail "readiness endpoint returned $code"
 python3 - <<'PY' || fail "a dependency is not ready"
 import json, sys
 data = json.load(open("/tmp/sb-ready.json"))
