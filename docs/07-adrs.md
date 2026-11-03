@@ -372,6 +372,9 @@ existing backend image.
 **Consequences:**
 - The stack pulls on a clean machine without registry credentials.
 - Bucket bootstrap is idempotent and works against any S3-compatible provider.
+- MinIO 2026 rejects `PutBucketCors` with `NotImplemented`; CORS is served by
+  `MINIO_API_CORS_ALLOW_ORIGIN` instead, and the bootstrap treats bucket CORS as
+  best-effort (still applied on providers that support it).
 - Chainguard's rolling build is re-pinned deliberately; a digest pin does not
   receive updates on its own.
 - The backend image is now also the init image, so it must build before

@@ -50,6 +50,10 @@ def build_client() -> Any:
             signature_version="s3v4",
             s3={"addressing_style": "path"},
             retries={"max_attempts": 1},
+            # botocore >=1.36 adds x-amz-checksum-* by default; MinIO rejects
+            # those on PutBucketCors with NotImplemented.
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
         ),
     )
 
@@ -84,11 +88,21 @@ def main() -> int:
             raise
         print(f"storage init: bucket {settings.minio_bucket} already present")
 
-    client.put_bucket_cors(
-        Bucket=settings.minio_bucket,
-        CORSConfiguration=cors_rules(settings.site_url),
-    )
-    print(f"storage init: cors allows {settings.site_url}")
+    try:
+        client.put_bucket_cors(
+            Bucket=settings.minio_bucket,
+            CORSConfiguration=cors_rules(settings.site_url),
+        )
+        print(f"storage init: bucket cors allows {settings.site_url}")
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        if code == "NotImplemented":
+            # MinIO 2026 rejects PutBucketCors but serves CORS from
+            # MINIO_API_CORS_ALLOW_ORIGIN (set in compose), which is what the
+            # browser actually talks to for presigned POST.
+            print("storage init: bucket CORS unsupported; using API-level CORS")
+        else:
+            raise
     return 0
 
 

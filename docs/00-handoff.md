@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-03
-Status: **M0 implemented — smoke verification in progress**
-Next action: **commit M0, then M1 (tenancy foundation)**
+Status: **M0 complete — verified end to end**
+Next action: **M1 (tenancy foundation), after your go-ahead**
 
 ## 1. What this project is
 
@@ -37,6 +37,7 @@ onboarding.
 | 15 | Monorepo split: API + frontend BFF | ADR-015 |
 | 16 | Next.js single app (marketing + app + ops) | ADR-016 |
 | 17 | Reset `simple-websocket` into this project, keep history | ADR-017 |
+| 18 | Chainguard MinIO + S3-API bucket bootstrap (registry removal) | ADR-018 |
 
 ## 3. Scope boundary
 
@@ -73,9 +74,13 @@ data model — not a UI addition.
 - `frontend/` — Next.js 15.5, React 19, Tailwind 4, pnpm 10; placeholder page
   renders API status server-side; `/api/ping` proves a first-party cookie through
   Caddy; lint, typecheck, and production build pass.
-- Compose stack — postgres 16, redis 7, minio + bucket/CORS init, mailpit,
-  backend, frontend, caddy, mock-satusehat; `docker compose config` valid.
-- `make test` green; `make smoke` pending container startup.
+- Compose stack — postgres 16, redis 7, minio (Chainguard digest) + S3-API
+  bucket/CORS bootstrap, mailpit, backend, frontend, caddy, mock-satusehat;
+  `docker compose config` valid.
+- `make test` green; `make smoke` green against the running stack.
+- Readiness verified: all `ok`; stopping Redis returns `503` with `redis: error`
+  and recovers to `200` after restart.
+- MinIO bucket bootstrap exits `0`; API-level CORS returns the site origin.
 - CI workflow, Makefile, `.env.example`, README, LICENSE, docs copied.
 
 ## 6. Next action — finish M0, then M1
