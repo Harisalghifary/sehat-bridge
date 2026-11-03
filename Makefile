@@ -5,7 +5,7 @@ COMPOSE := docker compose
 .DEFAULT_GOAL := help
 .PHONY: help up down logs ps restart install test lint fmt health smoke clean docs build \
         backend-install backend-test backend-lint frontend-install frontend-test frontend-lint \
-        migrate tenant seed worker demo screenshots sweep
+        migrate tenant seed worker demo screenshots sweep integration-demo worker-once
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -85,8 +85,15 @@ tenant: backend/.venv ## make tenant NAME=slug OWNER=email [TITLE="Display Name"
 seed: backend/.venv ## Provision the two demo tenants
 	cd backend && uv run python -m scripts.seed
 
-worker: ## Available from M5
-	@echo "target 'worker' lands in M5 (SATUSEHAT adapter)"
+worker: ## Run the SATUSEHAT outbox worker (Compose network)
+	$(COMPOSE) up worker
+
+worker-once: ## Drain one worker pass (demo/tests)
+	$(COMPOSE) run --rm -T worker python -m app.integrations.satusehat.worker --once
+
+integration-demo: backend/.venv ## Credentials -> test -> sync -> job result table
+	cd backend && uv run python -m app.cli migrate-tenants
+	cd backend && uv run python -m scripts.integration_demo
 
 sweep: backend/.venv ## Remove expired uploads and release quota
 	cd backend && uv run python -m app.files.sweep

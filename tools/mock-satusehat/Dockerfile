@@ -3,7 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
-RUN pip install --no-cache-dir "fastapi>=0.115,<0.116" "uvicorn>=0.32,<0.33"
+RUN pip install --no-cache-dir "fastapi>=0.115,<0.116" "uvicorn>=0.32,<0.33" "python-multipart>=0.0.9"
 
 COPY main.py .
 

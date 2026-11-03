@@ -68,6 +68,16 @@ jobs:
             server /data
       - name: Bootstrap bucket
         run: uv run python -m app.init_storage
+      - name: Start mock SATUSEHAT
+        working-directory: .
+        run: |
+          docker build -t mock-satusehat tools/mock-satusehat
+          docker run -d --name mock-satusehat -p 8090:8090 mock-satusehat
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8090/health && break
+            sleep 2
+          done
+          curl -fsS http://localhost:8090/health
       - run: uv run pytest -q -m integration
 
   frontend:

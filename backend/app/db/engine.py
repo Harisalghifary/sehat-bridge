@@ -27,6 +27,10 @@ def make_engine(url: str, *, pool_size: int = 5) -> AsyncEngine:
         pool_pre_ping=True,
         pool_size=pool_size,
         max_overflow=pool_size,
+        # Tenant schemas are created and dropped at runtime; asyncpg's prepared
+        # statement cache considers those plans invalid. Disable it so a
+        # provision/drop does not poison pooled connections.
+        connect_args={"statement_cache_size": 0},
     )
 
 

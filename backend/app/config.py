@@ -41,6 +41,15 @@ class Settings(BaseSettings):
 
     site_url: str = "http://localhost:8080"
 
+    satusehat_mode: str = "mock"
+    satusehat_mock_url: str = "http://localhost:8090"
+    satusehat_live_url: str = "https://api-satusehat.kemkes.go.id"
+    satusehat_timeout_seconds: float = 10.0
+    satusehat_max_attempts: int = 5
+    satusehat_backoff_base_seconds: float = 2.0
+    worker_stale_seconds: int = 120
+    worker_poll_seconds: float = 1.0
+
     secret_key: str = "dev-only-change-me-32-bytes-minimum"
     app_encryption_key: str = "dev-only-change-me-32-bytes-minimum"
 

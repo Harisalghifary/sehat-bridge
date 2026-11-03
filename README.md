@@ -11,11 +11,12 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M4 — berkas & object storage.** The full file slice works end to end: presigned
-POST uploads constrained by MinIO policy, quota reservation, server-side
-verification (size, content type, SHA-256), short-lived download links, soft
-delete, and an expired-upload sweeper. The SATUSEHAT adapter and product UI
-follow in M5–M10 (see `docs/05-milestones.md`).
+**M5 — integrasi SATUSEHAT (mock-first).** The integration pipeline works end to
+end without Kemenkes approval: encrypted per-tenant credentials, connection test,
+a transactional outbox, a fair resumable worker with bounded retries, and
+idempotent resource mappings. `SatusehatPort` has `mock` (default) and `live`
+adapters, selected only by configuration. The product UI follows in M6–M10 (see
+`docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema
@@ -42,6 +43,9 @@ make up          # build + start postgres, redis, minio, backend, frontend, cadd
 make smoke       # M0 acceptance checks
 make migrate     # public schema (Alembic)
 make seed        # two demo tenants
+make integration-demo  # credentials -> test -> sync -> worker result table
+make worker      # outbox worker on the Compose network
+make sweep       # release expired uploads
 ```
 
 Buka <http://localhost:8080> untuk aplikasi, <http://localhost:8080/api/docs>
@@ -109,6 +113,7 @@ Kontrak lengkap ada di `docs/04-api-spec.md`; sumber kebenaran adalah OpenAPI.
 | `docs/07-adrs.md` | ADR-001…017 |
 | `docs/08-ui.md` | situs, aplikasi, ops, design system |
 | `docs/09-readme-and-demo.md` | screenshot dan demo |
+| `docs/satusehat.md` | adapter, batas mock, dan yang belum terbukti |
 
 ## Lisensi
 

@@ -251,10 +251,9 @@ Notes:
 - `payload` is a **snapshot**, not a reference. If the local row changes after
   enqueue, the job still pushes what the user saw; a later job carries the newer
   state. This makes replay and audit honest.
-- `UNIQUE (kind, local_id, status)` is intentionally *not* a uniqueness guarantee
-  across all statuses — it prevents two queued jobs for the same resource while
-  allowing history. The service additionally checks `sync_resources` before
-  enqueue.
+- `UNIQUE (kind, local_id, status)` was replaced in `0003` by a partial unique
+  index on `queued/running`: this prevents two active jobs while allowing a
+  resource to fail, be retried, and retain its history.
 - Credentials live in the tenant schema, so dropping a tenant drops its secrets.
   The encryption key stays in the platform's environment, never in the database.
 - Secret columns are excluded from `pg_dump`? **No** — dumps include ciphertext,

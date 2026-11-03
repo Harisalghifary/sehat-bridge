@@ -24,6 +24,7 @@ local install). The container still listens on 5432 internally.
 | <http://localhost:8080/api/v1/health/ready> | dependency readiness |
 | <http://localhost:9001> | MinIO console (`sehat` / `sehat-secret`) |
 | <http://localhost:8025> | Mailpit |
+| <http://localhost:8090/health> | mock SATUSEHAT |
 
 ## Common problems
 

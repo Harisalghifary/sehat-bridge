@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-04
-Status: **M4 complete — files and object storage verified**
-Next action: **M5 (SATUSEHAT adapter, mock-first), after your go-ahead**
+Status: **M5 complete — SATUSEHAT mock pipeline verified**
+Next action: **M6 (marketing site), after your go-ahead**
 
 ## 1. What this project is
 
@@ -154,19 +154,40 @@ data model — not a UI addition.
   origin; 25 MB+ objects fail at MinIO with `EntityTooLarge`.
 - 10 file integration tests; suite now 19 unit and 32 integration.
 
-## 6. Next action — M5
+### M5 — SATUSEHAT adapter and outbox
+
+- `SatusehatPort` with `mock` (default) and `live` adapters; both pass a runtime
+  protocol/contract test, and mode selection is configuration only.
+- Mock service (`tools/mock-satusehat`) serves an OAuth2 token endpoint and
+  FHIR-shaped `Organization`/`Patient` resources, with `?fail=500|4xx|timeout`.
+- Credentials live per tenant; `client_secret` is Fernet-encrypted with a key
+  derived from `APP_ENCRYPTION_KEY`. API returns only `has_secret`.
+- `0002_integrations.sql` adds credentials, jobs, and mappings; `0003` replaces
+  the original per-status uniqueness with a partial unique index on active jobs
+  so repeated failures keep history.
+- Outbox worker: transactional enqueue, idempotent mapping short-circuit,
+  exponential backoff, max 5 → `dead`, 4xx → `failed`, stale `running` recovery,
+  one job per tenant per cycle.
+- REST surface: credentials GET/PUT, test connection, enqueue, job list/detail;
+  cross-tenant ids return `404`.
+- `make worker`, `make worker-once`, and `make integration-demo` (Compose worker
+  so internal mock DNS works).
+- Secrets verified absent from responses, audit metadata, and captured logs.
+- 9 integration tests + 7 unit tests; suite now 26 unit and 41 integration.
+
+## 6. Next action — M6
 
 ```bash
-make up          # build + start
-make test        # unit + frontend
-make test-integration
-make sweep       # release abandoned uploads
-git add -A && git commit -m "feat(m4): files and object storage"
+make up                  # build + start (includes mock-satusehat)
+make test                # unit + frontend
+make test-integration    # needs postgres, redis, minio, mock
+make integration-demo    # M5 gate
+git add -A && git commit -m "feat(m5): SATUSEHAT mock-first adapter and outbox"
 git push origin main
 ```
 
-M5 is the mock-first SATUSEHAT adapter (`SatusehatPort`, mock container, worker,
-outbox/retries). Stop after its gate and review before M6.
+M6 is the marketing site (Indonesian copy, no copied dhealth assets). Stop after
+its gate and review before M7.
 
 ## 7. Open questions (non-blocking)
 

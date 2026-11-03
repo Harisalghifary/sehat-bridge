@@ -87,6 +87,8 @@ services:
       context: ./tools/mock-satusehat
     environment:
       MOCK_MODE: mock
+    ports:
+      - "8090:8090"
     healthcheck:
       test:
         [
@@ -124,6 +126,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mock-satusehat:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -136,6 +140,30 @@ services:
       timeout: 3s
       retries: 20
       start_period: 10s
+
+  worker:
+    # The outbox worker lives on the Compose network like the API: tenant
+    # credentials store internal URLs, which host processes cannot resolve.
+    image: sehat-bridge/backend:local
+    build:
+      context: ./backend
+    command: ["python", "-m", "app.integrations.satusehat.worker"]
+    environment:
+      ENV: ${ENV:-dev}
+      DATABASE_URL: postgresql+asyncpg://${APP_DB_ROLE:-sehat_app}:${APP_DB_PASSWORD:-sehat_app}@postgres:5432/${POSTGRES_DB:-sehat}
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sehat}:${POSTGRES_PASSWORD:-sehat}@postgres:5432/${POSTGRES_DB:-sehat}
+      APP_DB_ROLE: ${APP_DB_ROLE:-sehat_app}
+      REDIS_DSN: redis://redis:6379/0
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-dev-only-change-me-32-bytes-minimum}
+      SATUSEHAT_MODE: ${SATUSEHAT_MODE:-mock}
+      SATUSEHAT_MOCK_URL: http://mock-satusehat:8090
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-satusehat:
+        condition: service_healthy
 
   frontend:
     build:

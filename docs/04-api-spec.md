@@ -226,7 +226,8 @@ configured adapter (`mock` by default).
   "last_verified_at": null, "last_error": null,
   "mode": "mock" }
 ```
-The secret is never returned in any form.
+The secret is never returned in any form. `404 credentials_not_found` when the
+tenant has not configured the provider.
 
 ### PUT `/integrations/satusehat`
 
@@ -259,7 +260,8 @@ created_at, updated_at }], next_cursor, has_more }`.
 
 ### GET `/integrations/satusehat/jobs/{job_id}`
 
-Single job with `response_body` (identifier-redacted).
+Single job with `response_body` (identifier-redacted) and the current
+`fhir_id` mapping. `404 job_not_found` for an unknown or cross-tenant job.
 
 ### Contract with the web app
 
