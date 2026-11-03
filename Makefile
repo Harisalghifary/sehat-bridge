@@ -3,15 +3,18 @@ SHELL := /bin/bash
 COMPOSE := docker compose
 
 .DEFAULT_GOAL := help
-.PHONY: help up down logs ps restart install test lint fmt health smoke clean docs \
+.PHONY: help up down logs ps restart install test lint fmt health smoke clean docs build \
         backend-install backend-test backend-lint frontend-install frontend-test frontend-lint \
         migrate tenant seed worker demo screenshots
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-up: ## Build and start the whole stack
-	$(COMPOSE) up -d --build
+up: build ## Build and start the whole stack
+	$(COMPOSE) up -d
+
+build: ## Build images sequentially (safe on a 4 GB Docker VM)
+	COMPOSE_PARALLEL_LIMIT=1 $(COMPOSE) build
 
 down: ## Stop the stack (volumes kept)
 	$(COMPOSE) down

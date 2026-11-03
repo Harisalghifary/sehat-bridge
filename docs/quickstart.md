@@ -24,6 +24,7 @@ Open <http://localhost:8080>.
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| build dies with `rpc error ... EOF` | Docker VM out of memory during parallel builds | `make build` (sequential); give Docker Desktop more RAM |
 | `/` returns 502 | frontend still building | `docker compose logs -f frontend` |
 | readiness shows `minio: error` | minio not up yet | wait, then `make health` |
 | upload fails with a network error | bucket CORS missing | `docker compose logs minio-init` |
