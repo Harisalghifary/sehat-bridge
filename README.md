@@ -11,11 +11,11 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M3 — pengguna & peran.** Tenancy, authentication, and member management work
-end to end: argon2id passwords, rotating refresh tokens, owner/admin/member
-roles with last-owner protection, cursor-paginated member lists, profile
-updates, rate limits, and audit events. Files and the SATUSEHAT adapter follow
-in M4–M10 (see `docs/05-milestones.md`).
+**M4 — berkas & object storage.** The full file slice works end to end: presigned
+POST uploads constrained by MinIO policy, quota reservation, server-side
+verification (size, content type, SHA-256), short-lived download links, soft
+delete, and an expired-upload sweeper. The SATUSEHAT adapter and product UI
+follow in M5–M10 (see `docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema

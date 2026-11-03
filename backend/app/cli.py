@@ -24,6 +24,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("migrate-tenants", help="apply pending tenant migrations")
     sub.add_parser("list-tenants", help="list tenants")
+    sub.add_parser("sweep", help="remove expired uploads and release quota")
     return parser
 
 
@@ -50,6 +51,13 @@ async def _run(args: argparse.Namespace) -> int:
         for slug, applied in results:
             state = ", ".join(applied) if applied else "up to date"
             print(f"{slug}: {state}")
+        return 0
+
+    if args.command == "sweep":
+        from app.files.sweep import sweep_expired
+
+        removed = await sweep_expired()
+        print(f"sweep: removed {removed} expired upload(s)")
         return 0
 
     tenants = await service.list_tenants()

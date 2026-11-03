@@ -124,11 +124,15 @@ MinIO rejects oversize or mislabelled bodies before they land.
 Errors: `413 file_too_large`, `415 unsupported_media_type`, `409 quota_exceeded`,
 `503 storage_unavailable`.
 
+The POST policy pins `content-length-range` to the reserved size and an exact
+`Content-Type`, so MinIO rejects oversize or mislabelled bodies before they land.
+
 ### POST `/files/{file_id}/complete`
 
 `200` → file object. Performs `HEAD`, verifies `Content-Length` and
 `Content-Type`, stores SHA-256, `status` → `ready`.
-Errors: `404 object_not_found`, `409 size_mismatch`, `410 upload_expired`.
+Errors: `404 object_not_found`, `409 already_completed`, `409 size_mismatch`,
+`409 content_type_mismatch`, `410 upload_expired`.
 
 ### GET `/files/{file_id}/download`
 
@@ -138,7 +142,8 @@ through the app.
 ### GET `/files`
 
 Cursor paginated, newest first: `{ "items": [...], "next_cursor": "…", "has_more": true }`.
-Optional `status`, `owner` (admin only).
+Optional `status`, `owner` (admin only). Members see only their own files; deleted
+rows are hidden unless `status=deleted` is requested.
 
 ### DELETE `/files/{file_id}`
 

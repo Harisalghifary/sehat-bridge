@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     minio_root_password: str = "sehat-secret"
     minio_bucket: str = "sehat-bridge"
 
+    max_file_bytes: int = 25 * 1024 * 1024
+    allowed_content_types: tuple[str, ...] = (
+        "image/png",
+        "image/jpeg",
+        "application/pdf",
+        "text/plain",
+        "text/csv",
+    )
+    quota_bytes: int = 1024 * 1024 * 1024
+    upload_url_ttl_seconds: int = 600
+    download_url_ttl_seconds: int = 300
+
     site_url: str = "http://localhost:8080"
 
     secret_key: str = "dev-only-change-me-32-bytes-minimum"

@@ -16,6 +16,7 @@ dependencies = [
     "pyjwt>=2.9.0",
     "pwdlib[argon2]>=0.2.1",
     "email-validator>=2.2.0",
+    "aioboto3>=13.2.0",
 ]
 
 [dependency-groups]
@@ -61,5 +62,5 @@ no_implicit_optional = true
 exclude = ["tests/"]
 
 [[tool.mypy.overrides]]
-module = ["redis.*", "asyncpg.*", "boto3.*", "botocore.*"]
+module = ["redis.*", "asyncpg.*", "boto3.*", "botocore.*", "aioboto3.*"]
 ignore_missing_imports = true

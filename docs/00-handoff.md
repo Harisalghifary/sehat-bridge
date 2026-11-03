@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
-Last updated: 2026-11-03
-Status: **M3 complete — users and roles verified**
-Next action: **M4 (files & object storage), after your go-ahead**
+Last updated: 2026-11-04
+Status: **M4 complete — files and object storage verified**
+Next action: **M5 (SATUSEHAT adapter, mock-first), after your go-ahead**
 
 ## 1. What this project is
 
@@ -130,17 +130,43 @@ data model — not a UI addition.
 - Shared identity verified: one email, two tenants, different roles and profiles.
 - 8 user/role integration tests; suite now 19 unit and 22 integration.
 
-## 6. Next action — finish M0, then M1
+### M4 — files and object storage
+
+- `app/storage.py` wraps `aioboto3`; server calls use the internal MinIO
+  endpoint, while presigned URLs are signed against `MINIO_PUBLIC_URL` so the
+  browser can reach them.
+- `POST /files/presign-upload` inserts an `uploading` row (the quota
+  reservation), then returns a presigned POST whose policy pins
+  `content-length-range` to the exact reserved size and the `Content-Type`.
+- Quota is serialised per tenant with an advisory lock and excludes `deleted`
+  rows; oversize/wrong-type bodies are rejected by MinIO itself.
+- `POST /files/{id}/complete` checks expiry, `HEAD`s the object, verifies size
+  and type, streams SHA-256, and transitions `uploading → ready`. Missing object
+  is `404 object_not_found`; a second completion is `409 already_completed`.
+- `GET /files/{id}/download` issues a 5-minute presigned GET; cross-tenant ids
+  return `404` with no URL.
+- `GET /files` is cursor-paginated; members see only their own files, admins can
+  filter by `owner`, and deleted rows are hidden unless requested.
+- `DELETE /files/{id}` is idempotent, soft-deletes the row, removes the object,
+  and audits `file.deleted`.
+- `make sweep` deletes expired `uploading` rows and releases their quota.
+- CORS is proven by preflight and an `Origin`-tagged upload from the site
+  origin; 25 MB+ objects fail at MinIO with `EntityTooLarge`.
+- 10 file integration tests; suite now 19 unit and 32 integration.
+
+## 6. Next action — M5
 
 ```bash
 make up          # build + start
-make smoke       # acceptance checks
-make test        # local suite
-git add -A && git commit -m "chore: bootstrap sehat-bridge (M0)"
+make test        # unit + frontend
+make test-integration
+make sweep       # release abandoned uploads
+git add -A && git commit -m "feat(m4): files and object storage"
 git push origin main
 ```
 
-After M0's gate passes, start M1 exactly as written in `05-milestones.md`.
+M5 is the mock-first SATUSEHAT adapter (`SatusehatPort`, mock container, worker,
+outbox/retries). Stop after its gate and review before M6.
 
 ## 7. Open questions (non-blocking)
 
@@ -164,5 +190,5 @@ After M0's gate passes, start M1 exactly as written in `05-milestones.md`.
 
 1. Read this file, then `01-product.md` and `05-milestones.md`.
 2. Switch the agent out of Plan mode.
-3. Start at M0; stop after its acceptance gate.
-4. Do not start M1 until the M0 demo passes on a clean machine.
+3. Confirm the current milestone gate; start the next one only after approval.
+4. Do not start M5 until M4's demo passes on a clean machine.

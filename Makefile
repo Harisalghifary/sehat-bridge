@@ -5,7 +5,7 @@ COMPOSE := docker compose
 .DEFAULT_GOAL := help
 .PHONY: help up down logs ps restart install test lint fmt health smoke clean docs build \
         backend-install backend-test backend-lint frontend-install frontend-test frontend-lint \
-        migrate tenant seed worker demo screenshots
+        migrate tenant seed worker demo screenshots sweep
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -87,6 +87,9 @@ seed: backend/.venv ## Provision the two demo tenants
 
 worker: ## Available from M5
 	@echo "target 'worker' lands in M5 (SATUSEHAT adapter)"
+
+sweep: backend/.venv ## Remove expired uploads and release quota
+	cd backend && uv run python -m app.files.sweep
 
 screenshots: ## Available from M10
 	@echo "screenshot harness lands in M10"
