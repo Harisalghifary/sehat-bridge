@@ -29,8 +29,23 @@ class Settings(BaseSettings):
 
     site_url: str = "http://localhost:8080"
 
-    secret_key: str = "dev-only-change-me"
+    secret_key: str = "dev-only-change-me-32-bytes-minimum"
     app_encryption_key: str = "dev-only-change-me-32-bytes-minimum"
+
+    jwt_issuer: str = "sehat-bridge"
+    jwt_audience: str = "sehat-bridge-api"
+    access_token_ttl_seconds: int = 900
+    refresh_token_ttl_days: int = 30
+    registration_enabled: bool = True
+    demo_password: str = "demo-password-123"
+    platform_admin_token: str = "dev-platform-token"
+
+    login_limit: int = 5
+    login_window_seconds: int = 300
+    register_limit: int = 10
+    register_window_seconds: int = 3600
+    refresh_limit: int = 30
+    refresh_window_seconds: int = 3600
 
     @property
     def is_prod(self) -> bool:

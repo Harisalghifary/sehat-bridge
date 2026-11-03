@@ -13,6 +13,9 @@ dependencies = [
     "boto3>=1.35.0",
     "redis>=5.2.0",
     "httpx>=0.28.0",
+    "pyjwt>=2.9.0",
+    "pwdlib[argon2]>=0.2.1",
+    "email-validator>=2.2.0",
 ]
 
 [dependency-groups]
@@ -33,7 +36,7 @@ src = ["app", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC", "S", "RUF"]
-ignore = ["S101"]
+ignore = ["S101", "B008"]  # B008: FastAPI dependency defaults are idiomatic
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S105", "S106"]

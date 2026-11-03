@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-03
-Status: **M1 complete — tenancy verified**
-Next action: **M2 (authentication), after your go-ahead**
+Status: **M2 complete — authentication verified**
+Next action: **M3 (users, roles), after your go-ahead**
 
 ## 1. What this project is
 
@@ -97,6 +97,24 @@ data model — not a UI addition.
 - Six integration tests: idempotent provisioning, interleaved pool isolation,
   RLS denial, failed-provisioning cleanup, schema drift, migration re-run.
 - `scripts/check_tenant_safety.py` fails CI on session-level `search_path`.
+
+### M2 — authentication
+
+- argon2id via `pwdlib`; uniform `invalid_credentials` with a dummy verify on
+  unknown emails so timing matches.
+- Access token: HS256, 15 min, claims `iss/aud/sub/tid/role/scope/fid/jti`.
+- Refresh token: opaque, SHA-256 at rest, rotated on use, family reuse revokes
+  the whole chain and writes `auth.refresh_reuse`.
+- Logout blacklists the `jti` in Redis for its remaining lifetime.
+- Rate limits: login 5/5 min per tenant+email, register 10/hour per IP,
+  refresh 30/hour per token, `429` with `Retry-After`.
+- Platform login issues a tenant-less token with `scope=platform`; refresh tokens
+  for it are nullable-tenant (migration `0002_platform_refresh`).
+- `/users/me` returns the user, membership, and profile.
+- Audit events verified live: login, login_failed, refresh, refresh_reuse,
+  logout, platform_login, register.
+- 8 auth integration tests + 4 security unit tests; full suite 18 unit and
+  14 integration.
 
 ## 6. Next action — finish M0, then M1
 

@@ -30,9 +30,19 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql+asyncpg://sehat_app:sehat_app@localhost:5432/sehat
       MIGRATION_DATABASE_URL: postgresql+asyncpg://sehat:sehat@localhost:5432/sehat
+      REDIS_DSN: redis://localhost:6379/0
       APP_DB_ROLE: sehat_app
     steps:
       - uses: actions/checkout@v4

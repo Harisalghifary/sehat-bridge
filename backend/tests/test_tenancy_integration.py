@@ -11,12 +11,9 @@ from __future__ import annotations
 import asyncio
 import uuid
 from collections.abc import AsyncIterator
-from pathlib import Path
 
 import asyncpg
 import pytest
-from alembic import command
-from alembic.config import Config
 from app.config import get_settings
 from app.db.engine import asyncpg_dsn, make_engine, make_sessionmaker
 from app.db.session import tenant_session
@@ -26,28 +23,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 pytestmark = pytest.mark.integration
-
-BACKEND_ROOT = Path(__file__).resolve().parents[1]
-
-
-async def _ensure_app_role() -> None:
-    settings = get_settings()
-    conn = await asyncpg.connect(asyncpg_dsn(settings.migration_database_url))
-    try:
-        exists = await conn.fetchval(
-            "SELECT 1 FROM pg_roles WHERE rolname = $1", settings.app_db_role
-        )
-        if not exists:
-            await conn.execute(f"CREATE ROLE \"{settings.app_db_role}\" LOGIN PASSWORD 'sehat_app'")
-    finally:
-        await conn.close()
-
-
-@pytest.fixture(scope="session")
-def migrated_database() -> None:
-    asyncio.run(_ensure_app_role())
-    config = Config(str(BACKEND_ROOT / "alembic.ini"))
-    command.upgrade(config, "head")
 
 
 @pytest.fixture

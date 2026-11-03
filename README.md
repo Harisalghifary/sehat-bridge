@@ -11,16 +11,24 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M1 — fondasi tenancy.** The stack runs, the public schema is Alembic-managed,
-and every tenant gets an isolated PostgreSQL schema. Provisioning is idempotent,
-RLS is enforced through a non-owner role, and tenant resolution works through
-Caddy. Authentication, files, and the SATUSEHAT adapter follow in M2–M10
-(see `docs/05-milestones.md`).
+**M2 — autentikasi.** Tenancy and authentication are working end to end:
+argon2id passwords, 15-minute JWT access tokens, rotating opaque refresh tokens
+with family reuse detection, rate limits, audit events, and platform login.
+Files and the SATUSEHAT adapter follow in M3–M10 (see `docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema
-make seed        # two demo tenants: acme, globex
-make tenant NAME=klinik-sehat OWNER=owner@klinik.test TITLE="Klinik Sehat"
+make seed        # two demo tenants + platform operator
+```
+
+| Akun | Tenant | Sandi |
+|---|---|---|
+| `owner-acme@example.com` | acme (owner) | `demo-password-123` |
+| `same@person.dev` | acme (admin) / globex (member) | `demo-password-123` |
+| `ops@sehatbridge.dev` | platform (no tenant) | `demo-password-123` |
+
+```bash
+make tenant NAME=klinik-sehat OWNER=owner-klinik@example.com TITLE="Klinik Sehat"
 ```
 
 ## Menjalankan

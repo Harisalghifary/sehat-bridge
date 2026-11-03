@@ -7,12 +7,20 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from redis.asyncio import Redis
 
+from app.auth.router import router as auth_router
 from app.config import get_settings
 from app.db.engine import make_engine, make_sessionmaker
+from app.errors import (
+    AppError,
+    app_error_handler,
+    validation_error_handler,
+)
 from app.health import router as health_router
 from app.tenancy.middleware import TenantMiddleware
+from app.users.router import router as users_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,6 +56,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(health_router)
+    app.include_router(auth_router)
+    app.include_router(users_router)
+    app.add_exception_handler(AppError, app_error_handler)
+    app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_middleware(TenantMiddleware)
     return app
 

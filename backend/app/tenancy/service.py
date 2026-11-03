@@ -213,7 +213,13 @@ async def ensure_user(conn: asyncpg.Connection, email: str, password_hash: str) 
         """
         INSERT INTO public.users (email, hashed_password)
         VALUES ($1, $2)
-        ON CONFLICT (email) DO UPDATE SET updated_at = now()
+        ON CONFLICT (email) DO UPDATE SET
+            hashed_password = CASE
+                WHEN public.users.hashed_password = '!unset'
+                THEN EXCLUDED.hashed_password
+                ELSE public.users.hashed_password
+            END,
+            updated_at = now()
         RETURNING id
         """,
         email,
@@ -235,6 +241,28 @@ async def ensure_membership(
         tenant_id,
         role,
     )
+
+
+async def ensure_password(conn: asyncpg.Connection, email: str, password_hash: str) -> None:
+    """Backfill a placeholder hash without ever resetting a real password."""
+    await conn.execute(
+        """
+        UPDATE public.users
+           SET hashed_password = $2, updated_at = now()
+         WHERE email = $1 AND hashed_password = '!unset'
+        """,
+        email,
+        password_hash,
+    )
+
+
+async def ensure_password_for_email(email: str, password_hash: str) -> None:
+    settings = get_settings()
+    conn = await asyncpg.connect(asyncpg_dsn(settings.migration_database_url))
+    try:
+        await ensure_password(conn, email, password_hash)
+    finally:
+        await conn.close()
 
 
 async def upsert_profile(conn: asyncpg.Connection, *, user_id: UUID, display_name: str) -> None:

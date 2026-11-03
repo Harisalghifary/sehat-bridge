@@ -115,7 +115,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-sehat-secret}
       MINIO_BUCKET: ${MINIO_BUCKET:-sehat-bridge}
       SITE_URL: ${SITE_URL:-http://localhost:8080}
-      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me-32-bytes-minimum}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-dev-only-change-me-32-bytes-minimum}
       SATUSEHAT_MODE: ${SATUSEHAT_MODE:-mock}
       SATUSEHAT_MOCK_URL: http://mock-satusehat:8090

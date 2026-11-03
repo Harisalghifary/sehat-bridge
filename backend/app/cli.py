@@ -6,6 +6,8 @@ import argparse
 import asyncio
 import sys
 
+from app.auth.security import hash_password
+from app.config import get_settings
 from app.tenancy import service
 
 
@@ -18,6 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     tenant.add_argument("--name", required=True)
     tenant.add_argument("--owner", required=True, help="owner email")
     tenant.add_argument("--display-name")
+    tenant.add_argument("--password")
 
     sub.add_parser("migrate-tenants", help="apply pending tenant migrations")
     sub.add_parser("list-tenants", help="list tenants")
@@ -26,13 +29,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 async def _run(args: argparse.Namespace) -> int:
     if args.command == "tenant":
+        settings = get_settings()
+        password = args.password or settings.demo_password
         tenant = await service.provision_tenant(
             slug=args.slug,
             name=args.name,
             owner_email=args.owner,
             owner_display_name=args.display_name,
+            password_hash=hash_password(password),
         )
         print(f"tenant {tenant.slug} ready: schema={tenant.schema} id={tenant.id}")
+        await service.ensure_password_for_email(args.owner, hash_password(password))
+        print(f"owner login: {args.owner} / {password}")
         return 0
 
     if args.command == "migrate-tenants":
