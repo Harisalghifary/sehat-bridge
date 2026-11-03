@@ -11,10 +11,11 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M2 — autentikasi.** Tenancy and authentication are working end to end:
-argon2id passwords, 15-minute JWT access tokens, rotating opaque refresh tokens
-with family reuse detection, rate limits, audit events, and platform login.
-Files and the SATUSEHAT adapter follow in M3–M10 (see `docs/05-milestones.md`).
+**M3 — pengguna & peran.** Tenancy, authentication, and member management work
+end to end: argon2id passwords, rotating refresh tokens, owner/admin/member
+roles with last-owner protection, cursor-paginated member lists, profile
+updates, rate limits, and audit events. Files and the SATUSEHAT adapter follow
+in M4–M10 (see `docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema

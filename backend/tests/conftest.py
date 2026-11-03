@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -8,10 +9,12 @@ import asyncpg
 import pytest
 from alembic import command
 from alembic.config import Config
+from app.auth.security import hash_password
 from app.config import get_settings
 from app.db.engine import asyncpg_dsn, make_engine, make_sessionmaker
-from app.db.tenant_context import schema_name
+from app.db.tenant_context import TenantContext, schema_name
 from app.main import create_app
+from app.tenancy import service
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
 
@@ -72,3 +75,33 @@ async def api(migrated_database: None) -> AsyncIterator[AsyncClient]:
     finally:
         await app.state.redis.aclose()
         await app.state.engine.dispose()
+
+
+PASSWORD = "demo-password-123"
+
+
+@pytest.fixture
+async def tenant(
+    migrated_database: None,
+) -> AsyncIterator[tuple[TenantContext, str]]:
+    suffix = uuid.uuid4().hex[:8]
+    slug = f"auth-{suffix}"
+    email = f"owner-{suffix}@sehatbridge.dev"
+    created = await service.provision_tenant(
+        slug=slug,
+        name="Test Tenant",
+        owner_email=email,
+        password_hash=hash_password(PASSWORD),
+    )
+    try:
+        yield created, email
+    finally:
+        await drop_tenant(slug, email)
+        conn = await asyncpg.connect(asyncpg_dsn(get_settings().migration_database_url))
+        try:
+            await conn.execute(
+                "DELETE FROM public.users WHERE email LIKE $1",
+                f"%-{suffix}@sehatbridge.dev",
+            )
+        finally:
+            await conn.close()

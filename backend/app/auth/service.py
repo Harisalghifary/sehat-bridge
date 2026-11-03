@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -12,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.audit import write_audit as _audit
 from app.auth.security import (
     create_access_token,
     hash_password,
@@ -72,36 +72,6 @@ async def _scope_session(session: AsyncSession, tenant: TenantContext) -> None:
     await session.execute(
         text("SELECT set_config('app.tenant_id', :tid, true)"),
         {"tid": str(tenant.id)},
-    )
-
-
-async def _audit(
-    session: AsyncSession,
-    action: str,
-    *,
-    tenant_id: UUID | None = None,
-    actor_user_id: UUID | None = None,
-    ip: str | None = None,
-    metadata: dict[str, Any] | None = None,
-) -> None:
-    await session.execute(
-        text(
-            """
-            INSERT INTO public.audit_log
-                (tenant_id, actor_user_id, action, metadata, ip)
-            VALUES (
-                :tenant_id, :actor, :action,
-                CAST(:metadata AS jsonb), CAST(:ip AS inet)
-            )
-            """
-        ),
-        {
-            "tenant_id": tenant_id,
-            "actor": actor_user_id,
-            "action": action,
-            "metadata": json.dumps(metadata or {}),
-            "ip": ip,
-        },
     )
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import AsyncIterator
 
 import asyncpg
 import pytest
@@ -27,34 +26,6 @@ def _headers(extra: dict[str, str] | None = None) -> dict[str, str]:
     if extra:
         headers.update(extra)
     return headers
-
-
-async def _purge_users(pattern: str) -> None:
-    conn = await asyncpg.connect(asyncpg_dsn(get_settings().migration_database_url))
-    try:
-        await conn.execute("DELETE FROM public.users WHERE email LIKE $1", pattern)
-    finally:
-        await conn.close()
-
-
-@pytest.fixture
-async def tenant(
-    migrated_database: None,
-) -> AsyncIterator[tuple[TenantContext, str]]:
-    suffix = uuid.uuid4().hex[:8]
-    slug = f"auth-{suffix}"
-    email = f"owner-{suffix}@sehatbridge.dev"
-    created = await service.provision_tenant(
-        slug=slug,
-        name="Auth Test",
-        owner_email=email,
-        password_hash=hash_password(PASSWORD),
-    )
-    try:
-        yield created, email
-    finally:
-        await drop_tenant(slug, email)
-        await _purge_users(f"%-{suffix}@sehatbridge.dev")
 
 
 async def _login(

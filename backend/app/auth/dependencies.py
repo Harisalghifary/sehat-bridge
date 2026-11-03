@@ -11,6 +11,7 @@ import jwt
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import decode_access_token, is_access_token_blacklisted
 from app.auth.service import get_tenant_by_id
@@ -173,7 +174,7 @@ def require_role(*roles: str) -> Callable[..., Any]:
 
 async def tenant_db(
     request: Request, user: AuthUser = Depends(get_current_user)
-) -> AsyncIterator[object]:
+) -> AsyncIterator[AsyncSession]:
     if user.tenant is None:
         raise AppError(status=403, code="tenant_required", title="A tenant is required")
     async with tenant_session(request.app.state.sessionmaker, user.tenant) as session:

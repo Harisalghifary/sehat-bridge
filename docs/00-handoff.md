@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-03
-Status: **M2 complete — authentication verified**
-Next action: **M3 (users, roles), after your go-ahead**
+Status: **M3 complete — users and roles verified**
+Next action: **M4 (files & object storage), after your go-ahead**
 
 ## 1. What this project is
 
@@ -115,6 +115,20 @@ data model — not a UI addition.
   logout, platform_login, register.
 - 8 auth integration tests + 4 security unit tests; full suite 18 unit and
   14 integration.
+
+### M3 — users and roles
+
+- `GET /users` is cursor-paginated (keyset on `created_at, user_id`), admin+,
+  with profile display names joined from the tenant schema.
+- `PATCH /users/{id}/role` enforces: members cannot grant roles, admins cannot
+  touch owners or grant owner, and the last owner cannot be demoted (`409
+  last_owner`).
+- Cross-tenant user ids return `404 user_not_found`, not `403`.
+- `PATCH /users/me` updates display name, IANA timezone (validated), and avatar
+  reference; every access goes through the tenant session.
+- Role changes write `user.role_changed` audit rows with before/after values.
+- Shared identity verified: one email, two tenants, different roles and profiles.
+- 8 user/role integration tests; suite now 19 unit and 22 integration.
 
 ## 6. Next action — finish M0, then M1
 
