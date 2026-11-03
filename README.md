@@ -11,9 +11,17 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M0 — fondasi.** Repositori, API, aplikasi Next.js, dan stack Compose berjalan.
-Fitur tenancy, autentikasi, berkas, dan integrasi menyusul pada M1–M10
-(lihat `docs/05-milestones.md`).
+**M1 — fondasi tenancy.** The stack runs, the public schema is Alembic-managed,
+and every tenant gets an isolated PostgreSQL schema. Provisioning is idempotent,
+RLS is enforced through a non-owner role, and tenant resolution works through
+Caddy. Authentication, files, and the SATUSEHAT adapter follow in M2–M10
+(see `docs/05-milestones.md`).
+
+```bash
+make migrate     # public schema
+make seed        # two demo tenants: acme, globex
+make tenant NAME=klinik-sehat OWNER=owner@klinik.test TITLE="Klinik Sehat"
+```
 
 ## Menjalankan
 
@@ -23,6 +31,8 @@ Prasyarat: Docker (dengan Compose), `uv`, Node 20, dan `pnpm`.
 cp .env.example .env
 make up          # build + start postgres, redis, minio, backend, frontend, caddy
 make smoke       # M0 acceptance checks
+make migrate     # public schema (Alembic)
+make seed        # two demo tenants
 ```
 
 Buka <http://localhost:8080> untuk aplikasi, <http://localhost:8080/api/docs>

@@ -8,10 +8,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.config import get_settings
+from app.db.engine import make_engine, make_sessionmaker
 from app.health import router as health_router
+from app.tenancy.middleware import TenantMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +25,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
-    app.state.engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+    app.state.engine = make_engine(settings.database_url)
+    app.state.sessionmaker = make_sessionmaker(app.state.engine)
     app.state.redis = Redis.from_url(settings.redis_dsn, decode_responses=True)
     logger.info("startup env=%s version=%s", settings.env, settings.version)
     try:
@@ -46,6 +48,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(health_router)
+    app.add_middleware(TenantMiddleware)
     return app
 
 

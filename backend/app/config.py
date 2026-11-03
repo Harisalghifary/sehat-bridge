@@ -15,7 +15,10 @@ class Settings(BaseSettings):
     env: str = "dev"
     version: str = "0.1.0"
 
-    database_url: str = "postgresql+asyncpg://sehat:sehat@localhost:5432/sehat"
+    database_url: str = "postgresql+asyncpg://sehat_app:sehat_app@localhost:55432/sehat"
+    migration_database_url: str = "postgresql+asyncpg://sehat:sehat@localhost:55432/sehat"
+    app_db_role: str = "sehat_app"
+
     redis_dsn: str = "redis://localhost:6379/0"
 
     minio_endpoint: str = "http://localhost:9000"

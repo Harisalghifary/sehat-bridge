@@ -424,7 +424,7 @@ Properties that must hold:
 | frontend (Next.js) | 3000 | not exposed directly in normal use |
 | backend (FastAPI) | 8000 | `/api/v1/*`, `/health/*`, `/metrics` |
 | mock-satusehat | 8090 | FHIR-shaped mock, `SATUSEHAT_MODE=mock` |
-| PostgreSQL | 5432 | db `sehat`, non-owner app role |
+| PostgreSQL | 5432 (network) / 55432 (host) | db `sehat`, non-owner app role |
 | Redis | 6379 | shared; keys prefixed `sb:` |
 | MinIO | 9000 / 9001 | API / console |
 | Mailpit | 8025 | SMTP 1025, web UI 8025 |

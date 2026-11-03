@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-03
-Status: **M0 complete — verified end to end**
-Next action: **M1 (tenancy foundation), after your go-ahead**
+Status: **M1 complete — tenancy verified**
+Next action: **M2 (authentication), after your go-ahead**
 
 ## 1. What this project is
 
@@ -82,6 +82,21 @@ data model — not a UI addition.
   and recovers to `200` after restart.
 - MinIO bucket bootstrap exits `0`; API-level CORS returns the site origin.
 - CI workflow, Makefile, `.env.example`, README, LICENSE, docs copied.
+
+### M1 — tenancy
+
+- Public schema in Alembic (`0001_public_baseline`): tenants, users,
+  memberships, refresh_tokens, audit_log, leads.
+- Tenant schema in `tenant_migrations/0001_init.sql`; applied per schema with
+  search_path scoped to the transaction.
+- Provisioning CLI (`make tenant`), fan-out (`make migrate-tenants`), seed with
+  two tenants and one identity shared across both.
+- Runtime connects as `sehat_app`, which owns nothing; RLS with `FORCE` returns
+  zero rows when `app.tenant_id` is unset.
+- Tenant middleware resolves the `X-Tenant-ID` hint through Redis + Postgres.
+- Six integration tests: idempotent provisioning, interleaved pool isolation,
+  RLS denial, failed-provisioning cleanup, schema drift, migration re-run.
+- `scripts/check_tenant_safety.py` fails CI on session-level `search_path`.
 
 ## 6. Next action — finish M0, then M1
 

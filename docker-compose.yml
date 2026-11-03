@@ -7,10 +7,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-sehat}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sehat}
       POSTGRES_DB: ${POSTGRES_DB:-sehat}
+      APP_DB_ROLE: ${APP_DB_ROLE:-sehat_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-sehat_app}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-55432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./compose/postgres:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sehat} -d ${POSTGRES_DB:-sehat}"]
       interval: 5s
@@ -102,7 +105,9 @@ services:
       context: ./backend
     environment:
       ENV: ${ENV:-dev}
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sehat}:${POSTGRES_PASSWORD:-sehat}@postgres:5432/${POSTGRES_DB:-sehat}
+      DATABASE_URL: postgresql+asyncpg://${APP_DB_ROLE:-sehat_app}:${APP_DB_PASSWORD:-sehat_app}@postgres:5432/${POSTGRES_DB:-sehat}
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sehat}:${POSTGRES_PASSWORD:-sehat}@postgres:5432/${POSTGRES_DB:-sehat}
+      APP_DB_ROLE: ${APP_DB_ROLE:-sehat_app}
       REDIS_DSN: redis://redis:6379/0
       MINIO_ENDPOINT: http://minio:9000
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}

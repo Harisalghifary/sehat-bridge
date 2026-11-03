@@ -16,6 +16,24 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sehat
+          POSTGRES_PASSWORD: sehat
+          POSTGRES_DB: sehat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sehat"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://sehat_app:sehat_app@localhost:5432/sehat
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://sehat:sehat@localhost:5432/sehat
+      APP_DB_ROLE: sehat_app
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -26,7 +44,9 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy app
+      - run: uv run python scripts/check_tenant_safety.py
       - run: uv run pytest -q
+      - run: uv run pytest -q -m integration
 
   frontend:
     name: frontend

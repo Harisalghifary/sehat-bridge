@@ -6,9 +6,14 @@ cd sehat-bridge
 cp .env.example .env
 make up
 make smoke
+make migrate
+make seed
 ```
 
 Open <http://localhost:8080>.
+
+Postgres is published on host port **55432** (5432 is commonly occupied by a
+local install). The container still listens on 5432 internally.
 
 ## What each service is
 

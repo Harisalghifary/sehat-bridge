@@ -38,13 +38,19 @@ frontend-install: frontend/node_modules
 frontend/node_modules: frontend/package.json frontend/pnpm-lock.yaml
 	cd frontend && pnpm install --frozen-lockfile
 
-test: backend-test frontend-test ## Run all local checks
+test: backend-test frontend-test ## Run unit checks (no services needed)
+
+test-integration: backend-test-integration ## Tenancy tests against a running stack
 
 backend-test: backend/.venv
 	cd backend && uv run pytest -q
 
+backend-test-integration: backend/.venv
+	cd backend && uv run pytest -q -m integration
+
 backend-lint: backend/.venv
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy app
+	cd backend && uv run python scripts/check_tenant_safety.py
 
 frontend-test: frontend/node_modules
 	cd frontend && pnpm lint && pnpm typecheck
@@ -65,8 +71,22 @@ smoke: ## M0 acceptance checks against the running stack
 
 demo: smoke ## Demo entry point (grows through the milestones first)
 
-migrate tenant seed worker: ## Available from M1
-	@echo "target '$@' lands in M1 (tenancy foundation)"
+migrate: backend/.venv ## Apply the public schema (Alembic)
+	cd backend && uv run alembic upgrade head
+
+migrate-tenants: backend/.venv ## Apply pending tenant migrations
+	cd backend && uv run python -m app.cli migrate-tenants
+
+tenant: backend/.venv ## make tenant NAME=slug OWNER=email [TITLE="Display Name"]
+	@test -n "$(NAME)" || (echo "NAME is required"; exit 1)
+	@test -n "$(OWNER)" || (echo "OWNER is required"; exit 1)
+	cd backend && uv run python -m app.cli tenant --slug "$(NAME)" --name "$(or $(TITLE),$(NAME))" --owner "$(OWNER)"
+
+seed: backend/.venv ## Provision the two demo tenants
+	cd backend && uv run python -m scripts.seed
+
+worker: ## Available from M5
+	@echo "target 'worker' lands in M5 (SATUSEHAT adapter)"
 
 screenshots: ## Available from M10
 	@echo "screenshot harness lands in M10"

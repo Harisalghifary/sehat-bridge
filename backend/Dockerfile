@@ -13,6 +13,9 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 COPY app ./app
+COPY alembic.ini ./
+COPY migrations ./migrations
+COPY tenant_migrations ./tenant_migrations
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
