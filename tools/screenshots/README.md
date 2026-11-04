@@ -1,8 +1,20 @@
 # Screenshot harness
 
-The capture harness lands in **M10**. It is a Playwright script that boots the
-stack, seeds demo data with fixed ids and a frozen clock, and captures the nine
-images listed in `docs/09-readme-and-demo.md` into `docs/screenshots/`.
+`capture.py` drives the real stack with Playwright (Python sync API). It seeds
+deterministic file/job rows into the `acme` tenant, captures the nine images
+from `docs/09-readme-and-demo.md`, and writes them to `docs/screenshots/`.
 
-Nothing here should be hand-edited: screenshots are a build product of the
-running UI, never mockups.
+```bash
+make screenshots
+make screenshots ARGS="--only beranda,dasbor"
+make screenshots ARGS="--no-seed"        # capture against existing rows
+```
+
+Requirements:
+
+- a running stack at <http://localhost:8080>, seeded with `make seed`
+- `uv run --with playwright playwright install chromium` once per machine
+
+The harness fails if the UI is missing a sampled element, so a broken login or
+renamed label is caught before images are committed. Images are captured at
+2× device scale (3× on mobile), with reduced motion and hidden scrollbars.

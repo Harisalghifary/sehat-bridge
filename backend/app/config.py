@@ -71,6 +71,20 @@ class Settings(BaseSettings):
     leads_ip_limit: int = 5
     leads_global_limit: int = 100
 
+    idempotency_ttl_seconds: int = 24 * 60 * 60
+    audit_retention_days: int = 365
+    lead_retention_days: int = 365
+
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_from: str = "Sehat Bridge <no-reply@sehatbridge.dev>"
+    email_token_ttl_seconds: int = 24 * 60 * 60
+    password_reset_ttl_seconds: int = 60 * 60
+
+    metrics_enabled: bool = True
+    metrics_token: str = ""
+    otel_exporter_otlp_endpoint: str = ""
+
     @property
     def is_prod(self) -> bool:
         return self.env == "prod"

@@ -25,6 +25,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("migrate-tenants", help="apply pending tenant migrations")
     sub.add_parser("list-tenants", help="list tenants")
     sub.add_parser("sweep", help="remove expired uploads and release quota")
+    sub.add_parser("retention", help="delete expired audit rows, leads, and tokens")
+
+    rewrap = sub.add_parser(
+        "rewrap-secrets", help="re-encrypt integration secrets with the current key"
+    )
+    rewrap.add_argument(
+        "--old-key",
+        required=True,
+        help="previous APP_ENCRYPTION_KEY passphrase",
+    )
     return parser
 
 
@@ -58,6 +68,24 @@ async def _run(args: argparse.Namespace) -> int:
 
         removed = await sweep_expired()
         print(f"sweep: removed {removed} expired upload(s)")
+        return 0
+
+    if args.command == "retention":
+        from app.maintenance import run_retention
+
+        counts = await run_retention()
+        print(
+            "retention: "
+            f"audit_rows={counts['audit_rows']} leads={counts['leads']} "
+            f"tokens={counts['auth_tokens']}"
+        )
+        return 0
+
+    if args.command == "rewrap-secrets":
+        from app.integrations.satusehat.rotate import rewrap_secrets
+
+        count = await rewrap_secrets(args.old_key)
+        print(f"rewrap-secrets: re-encrypted {count} credential(s)")
         return 0
 
     tenants = await service.list_tenants()

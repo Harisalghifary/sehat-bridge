@@ -22,15 +22,19 @@ from app.errors import (
 )
 from app.files.router import router as files_router
 from app.health import router as health_router
+from app.idempotency import IdempotencyMiddleware
 from app.integrations.satusehat.router import router as satusehat_router
 from app.leads.router import router as leads_router
+from app.metrics import router as metrics_router
+from app.observability import (
+    ObservabilityMiddleware,
+    configure_logging,
+    configure_tracing,
+)
 from app.tenancy.middleware import TenantMiddleware
 from app.users.router import router as users_router
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
+configure_logging(get_settings())
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +46,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.sessionmaker = make_sessionmaker(app.state.engine)
     app.state.redis = Redis.from_url(settings.redis_dsn, decode_responses=True)
     app.state.started_at = time.time()
+    configure_tracing(settings)
     logger.info("startup env=%s version=%s", settings.env, settings.version)
     try:
         yield
@@ -68,9 +73,12 @@ def create_app() -> FastAPI:
     app.include_router(satusehat_router)
     app.include_router(leads_router)
     app.include_router(admin_router)
+    app.include_router(metrics_router)
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_middleware(TenantMiddleware)
+    app.add_middleware(IdempotencyMiddleware)
+    app.add_middleware(ObservabilityMiddleware)
     return app
 
 

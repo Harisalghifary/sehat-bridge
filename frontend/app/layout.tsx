@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+// Bundled instead of fetched from Google at build time, so Docker/CI builds are
+// reproducible without network access to fonts.googleapis.com.
+const plusJakarta = localFont({
+  src: "./fonts/plus-jakarta-sans-latin.woff2",
   display: "swap",
   variable: "--font-plus-jakarta",
-  weight: ["400", "500", "600", "700"],
+  weight: "400 700",
 });
 
 export const metadata: Metadata = {

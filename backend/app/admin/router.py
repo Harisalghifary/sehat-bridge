@@ -31,6 +31,7 @@ from app.auth.security import hash_password
 from app.config import get_settings
 from app.errors import AppError
 from app.health import check_minio, check_postgres, check_redis
+from app.observability import TENANT_PROVISION_DURATION, TENANT_PROVISION_FAILURES
 from app.tenancy import service as tenancy
 from app.tenancy.service import ProvisioningError
 
@@ -88,6 +89,7 @@ async def provision_tenant(body: ProvisionRequest, user: Operator) -> ProvisionR
             detail=f"Tenant {body.slug} already exists.",
         )
 
+    started = time.perf_counter()
     try:
         created = await tenancy.provision_tenant(
             slug=body.slug,
@@ -97,12 +99,14 @@ async def provision_tenant(body: ProvisionRequest, user: Operator) -> ProvisionR
             password_hash=hash_password(body.password),
         )
     except ProvisioningError as exc:
+        TENANT_PROVISION_FAILURES.inc()
         raise AppError(
             status=500,
             code="provisioning_failed",
             title="Tenant provisioning failed",
             detail=str(exc),
         ) from exc
+    TENANT_PROVISION_DURATION.observe(time.perf_counter() - started)
 
     await service.record_audit(
         tenant_id=created.id,

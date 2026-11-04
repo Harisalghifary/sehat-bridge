@@ -45,6 +45,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
                         detail=f"Tenant status is {tenant.status}",
                     )
                 request.state.tenant = tenant
+                request.state.tenant_slug = tenant.slug
                 current_tenant.set(tenant)
             return await call_next(request)
         finally:

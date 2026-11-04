@@ -86,6 +86,7 @@ async def get_current_user(
             )
         if row is None or not row["is_active"] or not row["is_platform_admin"]:
             raise _unauthorized("invalid_token")
+        request.state.user_id = str(user_id)
         return AuthUser(
             id=user_id,
             email=row["email"],
@@ -142,6 +143,8 @@ async def get_current_user(
         )
 
     request.state.tenant = tenant
+    request.state.tenant_slug = tenant.slug
+    request.state.user_id = str(user_id)
     current_tenant.set(tenant)
 
     return AuthUser(

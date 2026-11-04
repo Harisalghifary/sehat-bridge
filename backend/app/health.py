@@ -60,23 +60,23 @@ def verdict(checks: dict[str, CheckState]) -> bool:
     return all(state == "ok" for state in checks.values())
 
 
-@router.get("/health/live")
-@router.get("/api/v1/health/live")
+@router.get("/health/live", summary="Liveness probe")
+@router.get("/api/v1/health/live", summary="Liveness probe")
 async def live() -> dict[str, str]:
     settings = get_settings()
     return {"status": "ok", "version": settings.version}
 
 
-@router.get("/public/health")
-@router.get("/api/v1/public/health")
+@router.get("/public/health", summary="Public status")
+@router.get("/api/v1/public/health", summary="Public status")
 async def public_health() -> dict[str, str]:
     """Minimal, unauthenticated status for the marketing site."""
     settings = get_settings()
     return {"status": "ok", "version": settings.version}
 
 
-@router.get("/health/ready")
-@router.get("/api/v1/health/ready")
+@router.get("/health/ready", summary="Readiness probe")
+@router.get("/api/v1/health/ready", summary="Readiness probe")
 async def ready(request: Request, response: Response) -> dict[str, object]:
     settings = get_settings()
     checks = {

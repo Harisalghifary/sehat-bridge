@@ -33,6 +33,23 @@ class LogoutRequest(BaseModel):
     all_sessions: bool = False
 
 
+class VerifyEmailConfirm(BaseModel):
+    token: str = Field(min_length=20)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=20)
+    new_password: str = Field(min_length=12, max_length=256)
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
 class UserSummary(BaseModel):
     id: UUID
     email: str

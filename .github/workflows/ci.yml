@@ -56,6 +56,10 @@ jobs:
       - run: uv run mypy app
       - run: uv run python scripts/check_tenant_safety.py
       - run: uv run pytest -q
+      - name: OpenAPI contract diff
+        run: |
+          uv run python scripts/generate_api_docs.py
+          git diff --exit-code docs/api.md
       - name: Start MinIO
         run: |
           docker run -d --name minio \

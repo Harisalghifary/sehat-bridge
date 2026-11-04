@@ -78,30 +78,43 @@ not `next dev`.
 
 ## 4. Observability
 
-### 4.1 Logging (structlog, JSON in prod, pretty in dev)
+### 4.1 Logging (stdlib logging, JSON in prod, text in dev)
 
-Every request line includes: `request_id`, `method`, `route`, `status`,
-`latency_ms`, `tenant_slug`, `user_id` (or `anon`), `client_ip`.
+Every request produces one line with: `request_id`, `method`, `route`, `status`,
+`latency_ms`, `tenant_slug`, `user_id` (or `anon`), `client_ip`. The same
+`request_id` is returned in `X-Request-ID` and every problem body `trace_id`.
 
 Never logged: tokens, passwords, presigned URLs, `PLATFORM_ADMIN_TOKEN`,
-Authorization headers. A scrubber runs on the log processor chain so an
-accidental `logger.info(..., headers=...)` cannot leak.
+Authorization headers. A scrubber runs in the log handler chain so an accidental
+`logger.info(..., headers=...)` cannot leak token material.
 
 ### 4.2 Metrics
 
-- `http_request_duration_seconds{route,status}` histogram
+`GET /api/v1/metrics` (set `METRICS_TOKEN` to require a bearer token):
+
+- `http_request_duration_seconds{route,method,status}` histogram
+- `http_requests_total{route,method,status}`
 - `auth_login_total{result}`
 - `tenant_provision_duration_seconds`, `tenant_provision_failures_total`
 - `file_upload_bytes_total{tenant}`, `file_quota_rejections_total`
-- `db_pool_in_use`, `db_pool_wait_seconds`
-- `redis_command_duration_seconds`, `s3_request_duration_seconds`
+- `db_pool_in_use`
 
-Cardinality guard: `tenant` label is capped to top-N plus `other`.
+Cardinality guard: the `tenant` label is capped to the first 20 slugs plus
+`other`. The Next.js frontend exposes `/api/metrics` with build info, uptime, and
+session-store reachability.
 
 ### 4.3 Traces
 
-One span per request; child spans for DB transaction, Redis call, S3 presign.
-`tenant_slug` and `user_id` as span attributes (not labels).
+One span per request (`http.request`) with route, method, status, `tenant_slug`,
+and `user_id` attributes. The OTLP exporter is off by default; set
+`OTEL_EXPORTER_OTLP_ENDPOINT` to enable it.
+
+### 4.4 Idempotency and retention
+
+- `Idempotency-Key` on POST/PUT/PATCH/DELETE stores the 2xx response in Redis for
+  24 hours. A different body with the same key returns `422 idempotency_key_reuse`.
+- `make retention` deletes audit rows and leads older than 365 days and clears
+  spent/expired auth tokens. Run it daily from cron or an external scheduler.
 
 ## 5. Runbook (summary; full version in `docs/runbook.md`)
 

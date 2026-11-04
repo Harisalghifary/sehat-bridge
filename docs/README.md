@@ -1,6 +1,6 @@
 # Sehat Bridge — Project Spec
 
-Status: **Draft (pre-implementation)**
+Status: **v0.1.0 released (M0–M10 complete)**
 Source design: `~/Haris/Seha Backend - System Design Document.pdf`
 Target repo: `~/github/sehat-bridge` (monorepo: `backend/` JSON API, `frontend/` Next.js app)
 
@@ -30,6 +30,12 @@ credentials, which require a registered PT/faskes and an onboarding agreement.
 | `07-adrs.md` | Architecture decision records |
 | `08-ui.md` | Marketing pages, faskes app, ops, design system |
 | `09-readme-and-demo.md` | README structure, screenshot harness, demo script |
+| `quickstart.md` | clone-to-running commands and common failures |
+| `api.md` | endpoint reference generated from OpenAPI |
+| `satusehat.md` | mock boundaries and what going live requires |
+| `runbook.md` | incident response, rotation, restore, stuck jobs |
+| `design-review.md` | source-document flaws mapped to fixes or deferrals |
+| `release.md` | v0.1.0 tag checklist |
 
 ## Reading order for a new dev
 

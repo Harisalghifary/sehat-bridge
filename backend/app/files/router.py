@@ -26,6 +26,8 @@ from app.files.schemas import (
     PresignUploadRequest,
     PresignUploadResponse,
 )
+from app.observability import FILE_QUOTA_REJECTIONS_TOTAL, FILE_UPLOAD_BYTES_TOTAL
+from app.observability_metrics import tenant_label
 from app.pagination import decode_cursor, encode_cursor
 from app.storage import delete_object, head_object, presign_get, presign_post, read_object
 
@@ -115,6 +117,7 @@ async def presign_upload(
         )
     ).scalar_one()
     if int(used) + body.size_bytes > settings.quota_bytes:
+        FILE_QUOTA_REJECTIONS_TOTAL.inc()
         raise AppError(
             status=409,
             code="quota_exceeded",
@@ -253,6 +256,8 @@ async def complete_upload(
         .mappings()
         .one()
     )
+
+    FILE_UPLOAD_BYTES_TOTAL.labels(tenant_label(tenant.slug)).inc(size)
 
     await write_audit(
         session,

@@ -70,10 +70,26 @@ Auth required. Body optional `{ "all_sessions": true }`. Blacklists the current
 `jti` for its remaining lifetime; `all_sessions` revokes the refresh family.
 `204`.
 
-### POST `/auth/verify-email` / `/auth/password-reset/*`
+### Email verification and password reset
 
-Reserved shapes, implemented in M5 against Mailpit:
-`202 { "message": "If the address exists, a link was sent." }` — always 202.
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| POST | `/auth/verify-email` | bearer | send a verification link to the current user, `202` |
+| POST | `/auth/verify-email/confirm` | none | `{ "token": "…" }`, single-use, `200` |
+| POST | `/auth/password-reset/request` | none | `{ "email": "…" }`, always `202` |
+| POST | `/auth/password-reset/confirm` | none | `{ "token": "…", "new_password": "…" }`; revokes all refresh tokens |
+
+Request responses never reveal whether an address exists:
+`202 { "message": "If the address exists, a link was sent." }`.
+Tokens are hashed at rest, expire (verification 24 h, reset 60 min), and are
+single-use. In Compose the email is delivered to Mailpit at
+<http://localhost:8025>.
+
+### GET `/metrics`
+
+Prometheus text format. Public unless `METRICS_TOKEN` is set, in which case a
+bearer token is required. Every request also returns `X-Request-ID`; a problem
+body carries the same id as `trace_id`.
 
 ## 3. Users & roles
 

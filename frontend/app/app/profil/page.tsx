@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { AppPage } from "@/components/app/AppPage";
+import { EmailVerification } from "@/components/app/EmailVerification";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ProfileForm } from "@/components/app/ProfileForm";
 import { ApiError, apiRequest, SessionExpiredError } from "@/lib/api";
@@ -43,6 +44,7 @@ export default async function ProfilePage() {
           avatarFileId={me.profile?.avatar_file_id ?? null}
           avatarUrl={avatarUrl}
         />
+        <EmailVerification email={me.email} verified={me.is_verified} />
       </div>
       </AppPage>
     );

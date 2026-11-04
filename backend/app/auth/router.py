@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 
-from app.auth import rate_limit, service
+from app.auth import rate_limit, service, tokens
 from app.auth.dependencies import AuthUser, get_current_user
 from app.auth.schemas import (
     LoginRequest,
     LogoutRequest,
+    MessageResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     PlatformLoginRequest,
     RefreshRequest,
     RegisterRequest,
     TokenResponse,
     UserSummary,
+    VerifyEmailConfirm,
 )
 from app.auth.security import blacklist_access_token, hash_refresh_token
 from app.config import get_settings
+from app.observability import AUTH_LOGIN_TOTAL
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -37,7 +42,9 @@ def _tokens(result: service.AuthResult) -> TokenResponse:
     status_code=status.HTTP_201_CREATED,
     summary="Register into an existing tenant",
 )
-async def register(body: RegisterRequest, request: Request) -> TokenResponse:
+async def register(
+    body: RegisterRequest, request: Request, background: BackgroundTasks
+) -> TokenResponse:
     settings = get_settings()
     await rate_limit.enforce(
         request.app.state.redis,
@@ -52,6 +59,12 @@ async def register(body: RegisterRequest, request: Request) -> TokenResponse:
         password=body.password,
         display_name=body.display_name,
         ip=rate_limit.client_ip(request),
+    )
+    background.add_task(
+        tokens.send_verification,
+        request.app.state.sessionmaker,
+        user_id=result.user_id,
+        email=result.email,
     )
     return _tokens(result)
 
@@ -69,13 +82,18 @@ async def login(body: LoginRequest, request: Request) -> TokenResponse:
         limit=settings.login_limit,
         window_seconds=settings.login_window_seconds,
     )
-    result = await service.login(
-        request.app.state.sessionmaker,
-        tenant_slug=body.tenant_slug,
-        email=str(body.email),
-        password=body.password,
-        ip=rate_limit.client_ip(request),
-    )
+    try:
+        result = await service.login(
+            request.app.state.sessionmaker,
+            tenant_slug=body.tenant_slug,
+            email=str(body.email),
+            password=body.password,
+            ip=rate_limit.client_ip(request),
+        )
+    except Exception:
+        AUTH_LOGIN_TOTAL.labels("failure").inc()
+        raise
+    AUTH_LOGIN_TOTAL.labels("success").inc()
     return _tokens(result)
 
 
@@ -92,12 +110,17 @@ async def platform_login(body: PlatformLoginRequest, request: Request) -> TokenR
         limit=settings.login_limit,
         window_seconds=settings.login_window_seconds,
     )
-    result = await service.platform_login(
-        request.app.state.sessionmaker,
-        email=str(body.email),
-        password=body.password,
-        ip=rate_limit.client_ip(request),
-    )
+    try:
+        result = await service.platform_login(
+            request.app.state.sessionmaker,
+            email=str(body.email),
+            password=body.password,
+            ip=rate_limit.client_ip(request),
+        )
+    except Exception:
+        AUTH_LOGIN_TOTAL.labels("failure").inc()
+        raise
+    AUTH_LOGIN_TOTAL.labels("success").inc()
     return _tokens(result)
 
 
@@ -121,6 +144,68 @@ async def refresh(body: RefreshRequest, request: Request) -> TokenResponse:
         ip=rate_limit.client_ip(request),
     )
     return _tokens(result)
+
+
+@router.post(
+    "/verify-email",
+    response_model=MessageResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Send (or resend) an email verification link",
+)
+async def request_email_verification(
+    request: Request,
+    background: BackgroundTasks,
+    user: AuthUser = Depends(get_current_user),
+) -> MessageResponse:
+    background.add_task(
+        tokens.send_verification,
+        request.app.state.sessionmaker,
+        user_id=user.id,
+        email=user.email,
+    )
+    return MessageResponse(message="Verification instructions sent.")
+
+
+@router.post(
+    "/verify-email/confirm",
+    response_model=MessageResponse,
+    summary="Confirm an email verification token",
+)
+async def confirm_email_verification(body: VerifyEmailConfirm, request: Request) -> MessageResponse:
+    message = await tokens.confirm_verification(request.app.state.sessionmaker, token=body.token)
+    return MessageResponse(message=message)
+
+
+@router.post(
+    "/password-reset/request",
+    response_model=MessageResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Request a password reset link",
+)
+async def request_password_reset(body: PasswordResetRequest, request: Request) -> MessageResponse:
+    settings = get_settings()
+    await rate_limit.enforce(
+        request.app.state.redis,
+        key=f"sb:rl:reset:{rate_limit.client_ip(request)}",
+        limit=settings.login_limit,
+        window_seconds=settings.login_window_seconds,
+    )
+    await tokens.request_password_reset(request.app.state.sessionmaker, email=str(body.email))
+    return MessageResponse(message="If the address exists, a link was sent.")
+
+
+@router.post(
+    "/password-reset/confirm",
+    response_model=MessageResponse,
+    summary="Set a new password using a reset token",
+)
+async def confirm_password_reset(body: PasswordResetConfirm, request: Request) -> MessageResponse:
+    await tokens.confirm_password_reset(
+        request.app.state.sessionmaker,
+        token=body.token,
+        new_password=body.new_password,
+    )
+    return MessageResponse(message="Password updated.")
 
 
 @router.post(

@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-05
-Status: **M8 complete — ops console verified**
-Next action: **M9 (hardening & operations), after your go-ahead**
+Status: **v0.1.0 — M0–M10 complete**
+Next action: **maintenance / next milestone after review**
 
 ## 1. What this project is
 
@@ -237,36 +237,82 @@ data model — not a UI addition.
   origin guard as the faskes BFF.
 - Backend `/admin` surface: tenant list/detail, idempotent suspend/resume,
   filtered audit log, distinct actions, and runtime health with cross-tenant
-  queue depth. Operator identity reuses `/users/me` with a platform token.
-  Every admin route requires `scope=platform`; tenant tokens get
+  queue depth. Operator identity is `/admin/me` with a platform token. Every
+  admin route requires `scope=platform`; tenant tokens get
   `403 platform_required`.
 - Provisioning reuses the CLI service, records `tenant.provisioned_by_platform`,
   and returns a step list the console shows with elapsed time.
 - Ops console is a dense, separate shell with no marketing chrome; tenant rows
   and job counts come from the API.
 - Suspended tenants are blocked at three layers: login returns
-  `invalid_credentials`, tenant tokens return `403 tenant_inactive`, and the
-  app error boundary renders a clear block page with sign-out instead of a
-  generic failure. Resume restores login and data immediately.
+  `invalid_credentials`, tenant tokens return `403 tenant_inactive`, and every
+  app data request redirects to `/app/ditangguhkan`, which renders the block
+  page with retry and sign-out. Resume restores login and data immediately.
 - A platform admin also gets a "Konsol operator" link in the app menu, but it
   still requires a separate operator sign-in.
 - 5 admin integration tests; suite now 27 unit and 53 integration.
 - Live: provisioning took 1.01 s; suspend/resume, audit filter, and health
   were verified against the Compose stack.
 
-## 6. Next action — M9
+### M9 — hardening and operations
 
-```bash
-make up
-make test
-make test-integration
-git add -A && git commit -m "feat(m8): ops console"
-git push origin main
-```
+- `IdempotencyMiddleware` stores the first 2xx response for POST/PUT/PATCH/DELETE
+  in Redis for 24 hours, keyed by key + credentials + method + path + body hash.
+  A replay returns the identical body with `Idempotency-Replayed: true`; a
+  different body returns `422 idempotency_key_reuse`.
+- One `RequestContext` middleware writes one log line per request with
+  `request_id`, route, status, latency, tenant, user, and client IP. The same id
+  is returned in `X-Request-ID` and problem `trace_id`. A scrubber removes
+  bearer tokens, JWTs, passwords, secrets, and S3 signatures.
+- Prometheus metrics at `/api/v1/metrics`: request histogram/counter, login
+  outcomes, provisioning duration/failures, upload bytes, quota rejections, and
+  pool usage. The Next.js frontend exposes uptime and session-store health at
+  `/api/metrics`. OTLP tracing is off by default and enabled by
+  `OTEL_EXPORTER_OTLP_ENDPOINT`.
+- `make retention` deletes audit rows and leads older than 365 days plus spent
+  or expired auth tokens.
+- Email verification and password reset use single-use hashed tokens in
+  `auth_tokens`, Mailpit in Compose, and new `/lupa-sandi`, `/reset-sandi`, and
+  `/verifikasi` pages. Reset revokes every refresh token for the user.
+- `make rewrap-secrets OLD_KEY=…` re-encrypts all tenant integration secrets
+  under the current `APP_ENCRYPTION_KEY`, failing before any write if one value
+  cannot be decrypted.
+- `make restore-drill TENANT=acme` dumps one tenant schema, restores it into a
+  scratch schema, and diffs the column shape.
+- Contract tests prove every private `/api/v1` route rejects missing auth,
+  every documented route has a summary/tag, and `docs/api.md` is generated from
+  OpenAPI in CI.
+- Suite now 32 unit and 59 integration tests.
 
-M9 is hardening and operations: idempotency, retention jobs, structured logs,
-metrics/tracing, email verification and password reset, OpenAPI completeness,
-and the runbook. Stop after its gate and review before M10.
+### M10 — screenshots, docs and v0.1.0
+
+- Playwright harness (`tools/screenshots/capture.py`) seeds deterministic rows,
+  logs into the faskes and ops UIs, captures nine images at 2×/3×, resizes to the
+  documented widths, and keeps every PNG under 250 KB.
+- README is 170 lines with the disclaimer above the screenshots, a real
+  architecture diagram, quickstart, API table, security model, and docs index.
+- Added `docs/quickstart.md`, `api.md` (generated), `runbook.md`,
+  `design-review.md`, `release.md`, and `CHANGELOG.md`.
+- `make demo` exercises health, marketing, leads, two tenant provisions, shared
+  identity, forged-header rejection, RBAC, last-owner protection, file
+  upload/download, storage policy, SATUSEHAT token/sync/retry/4xx, and secret
+  hygiene. It prints one `[ok]` line per claim.
+- Live verification: 32 unit and 59 integration tests, restore drill, Mailpit
+  reset email, metrics scrape, request-id log correlation, and idempotent replay
+  all passed.
+- Tag `v0.1.0` and changelog. Social preview must be uploaded manually in the
+  GitHub repository settings (see `docs/release.md`).
+
+## 6. Next action
+
+The release gate is complete. Suggested next steps after review:
+
+1. Upload `docs/screenshots/cover.png` as the GitHub social preview.
+2. Choose a deployment target and record it as an ADR.
+3. Run `make retention` and the restore drill on a schedule in the chosen
+   environment.
+4. If real SATUSEHAT access arrives, add a live smoke test with the Kemenkes
+   credentials before claiming production readiness.
 
 ## 7. Open questions (non-blocking)
 

@@ -310,15 +310,15 @@ Demo: provision a tenant, suspend it, show the app block page
 **Goal:** safe to run for real users, diagnosable when it isn't.
 
 Tasks
-- [ ] Idempotency middleware (Redis, 24h, body hash)
-- [ ] Audit retention job; lead retention job (12 months)
-- [ ] Structured logs with `request_id`, `tenant_slug`, `user_id`, latency, no secrets
-- [ ] OpenTelemetry trace + Prometheus metrics (backend and frontend)
-- [ ] Error handling sweep: no bare `detail` in JSON routes; no stack traces in UI
-- [ ] Email verification + password reset via Mailpit
-- [ ] Tenant suspend/resume enforced at middleware level
-- [ ] OpenAPI completeness test; contract diff in CI
-- [ ] `docs/runbook.md`: rotate `SECRET_KEY`, re-wrap `APP_ENCRYPTION_KEY`, restore
+- [x] Idempotency middleware (Redis, 24h, body hash)
+- [x] Audit retention job; lead retention job (12 months)
+- [x] Structured logs with `request_id`, `tenant_slug`, `user_id`, latency, no secrets
+- [x] OpenTelemetry trace + Prometheus metrics (backend and frontend)
+- [x] Error handling sweep: no bare `detail` in JSON routes; no stack traces in UI
+- [x] Email verification + password reset via Mailpit
+- [x] Tenant suspend/resume enforced at middleware level
+- [x] OpenAPI completeness test; contract diff in CI
+- [x] `docs/runbook.md`: rotate `SECRET_KEY`, re-wrap `APP_ENCRYPTION_KEY`, restore
       one tenant schema, drain or replay a stuck sync job
 
 Acceptance
@@ -329,7 +329,7 @@ Acceptance
 - Chaos: Redis down (session loss handled), MinIO down (upload degrades only),
       mock SATUSEHAT down (jobs retry)
 
-Demo: chaos pass + `make verify-tenant TENANT=klinik-sehat`
+Demo: chaos checks + `make restore-drill TENANT=acme` + `make rewrap-secrets OLD_KEY=…`
 
 ---
 
@@ -338,17 +338,18 @@ Demo: chaos pass + `make verify-tenant TENANT=klinik-sehat`
 **Goal:** someone else can run, understand, and evaluate it without you.
 
 Tasks
-- [ ] Screenshot harness (`tools/screenshots/`, Playwright) per `09-readme-and-demo.md`
-- [ ] Marketing shots: beranda, solusi, integrasi (desktop + mobile)
-- [ ] App shots: dasbor, berkas, integrasi, anggota, ops
-- [ ] `README.md`: pitch, hero screenshot, disclaimer, architecture, quickstart,
+- [x] Screenshot harness (`tools/screenshots/`, Playwright) per `09-readme-and-demo.md`
+- [x] Marketing shots: beranda, solusi, integrasi (desktop + mobile)
+- [x] App shots: dasbor, berkas, integrasi, anggota, ops
+- [x] `README.md`: pitch, hero screenshot, disclaimer, architecture, quickstart,
       screenshot grid, status
-- [ ] `docs/quickstart.md`, `api.md`, `satusehat.md`, `runbook.md`, `design-review.md`,
+- [x] `docs/quickstart.md`, `api.md`, `satusehat.md`, `runbook.md`, `design-review.md`,
       `release.md`
-- [ ] `scripts/demo.sh`: two tenants, forged header, RBAC denial, upload,
+- [x] `scripts/demo.sh`: two tenants, forged header, RBAC denial, upload,
       mock sync with one forced failure
-- [ ] ADRs finalised; ADR-016/017 recorded
-- [ ] Tag `v0.1.0`, changelog, social preview uploaded
+- [x] ADRs finalised; ADR-016/017 recorded
+- [x] Tag `v0.1.0`, changelog
+- [ ] Social preview uploaded manually under GitHub repository settings
 
 Acceptance
 - A newcomer runs the quickstart and reaches the end of the demo

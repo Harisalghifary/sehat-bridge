@@ -5,7 +5,8 @@ COMPOSE := docker compose
 .DEFAULT_GOAL := help
 .PHONY: help up down logs ps restart install test lint fmt health smoke clean docs build \
         backend-install backend-test backend-lint frontend-install frontend-test frontend-lint \
-        migrate tenant seed worker demo screenshots sweep integration-demo worker-once
+        migrate tenant seed worker demo screenshots sweep integration-demo worker-once \
+        retention restore-drill rewrap-secrets docs-api screenshots-check
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -59,6 +60,9 @@ frontend-lint: frontend-test
 
 lint: backend-lint frontend-test ## Lint and typecheck everything
 
+docs-api: backend/.venv ## Regenerate docs/api.md from OpenAPI
+	cd backend && uv run python scripts/generate_api_docs.py
+
 fmt: ## Format and autofix
 	cd backend && uv run ruff format . && uv run ruff check --fix .
 	cd frontend && pnpm lint --fix
@@ -69,7 +73,8 @@ health: ## Print the readiness payload
 smoke: ## M0 acceptance checks against the running stack
 	@bash scripts/smoke.sh
 
-demo: smoke ## Demo entry point (grows through the milestones first)
+demo: ## End-to-end demo; prints [ok]/[fail] per claim
+	bash scripts/demo.sh
 
 migrate: backend/.venv ## Apply the public schema (Alembic)
 	cd backend && uv run alembic upgrade head
@@ -98,8 +103,22 @@ integration-demo: backend/.venv ## Credentials -> test -> sync -> job result tab
 sweep: backend/.venv ## Remove expired uploads and release quota
 	cd backend && uv run python -m app.files.sweep
 
-screenshots: ## Available from M10
-	@echo "screenshot harness lands in M10"
+retention: backend/.venv ## Delete expired audit rows, leads, and auth tokens
+	cd backend && uv run python -m app.cli retention
+
+restore-drill: ## Restore one tenant schema into a scratch schema and compare (TENANT=acme)
+	@test -n "$(TENANT)" || (echo "TENANT is required"; exit 1)
+	bash scripts/restore_drill.sh "$(TENANT)"
+
+rewrap-secrets: backend/.venv ## Re-encrypt integration secrets (OLD_KEY=previous passphrase)
+	@test -n "$(OLD_KEY)" || (echo "OLD_KEY is required"; exit 1)
+	cd backend && uv run python -m app.cli rewrap-secrets --old-key "$(OLD_KEY)"
+
+screenshots: ## Capture docs/screenshots from a seeded running stack
+	cd tools/screenshots && uv run --with playwright --with pillow python capture.py $(ARGS)
+
+screenshots-check: ## Regenerate into a temp dir (manual/weekly check)
+	cd tools/screenshots && uv run --with playwright --with pillow python capture.py --check
 
 clean: ## Remove local caches (not containers or volumes)
 	rm -rf backend/.pytest_cache backend/.mypy_cache backend/.ruff_cache frontend/.next

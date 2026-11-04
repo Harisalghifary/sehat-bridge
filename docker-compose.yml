@@ -120,6 +120,10 @@ services:
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me-32-bytes-minimum}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-dev-only-change-me-32-bytes-minimum}
       SATUSEHAT_MODE: ${SATUSEHAT_MODE:-mock}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       SATUSEHAT_MOCK_URL: http://mock-satusehat:8090
     depends_on:
       postgres:
