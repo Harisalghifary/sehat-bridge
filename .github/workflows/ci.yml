@@ -59,7 +59,7 @@ jobs:
       - name: OpenAPI contract diff
         run: |
           uv run python scripts/generate_api_docs.py
-          git diff --exit-code docs/api.md
+          git diff --exit-code -- ../docs/api.md
       - name: Start MinIO
         run: |
           docker run -d --name minio \
