@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
 Last updated: 2026-11-05
-Status: **M7 complete — faskes app verified**
-Next action: **M8 (ops console), after your go-ahead**
+Status: **M8 complete — ops console verified**
+Next action: **M9 (hardening & operations), after your go-ahead**
 
 ## 1. What this project is
 
@@ -225,18 +225,45 @@ data model — not a UI addition.
   explicitly per private page; marketing stays clean with or without a session.
 - 1 new file-usage integration test; suite now 27 unit and 48 integration.
 
-## 6. Next action — M8
+### M8 — ops console
+
+- Separate ops session: `POST/DELETE /api/ops/session` calls
+  `/auth/platform-login`, rejects non-platform accounts, and stores tokens in
+  Redis behind a signed `__Host-sb_ops` cookie. The faskes session and the ops
+  session never share a cookie.
+- `/ops/masuk`, `/ops/tenant`, `/ops/audit`, `/ops/kesehatan`, and a
+  catch-all `/api/ops/[...path]` proxy with the same one-shot refresh and
+  origin guard as the faskes BFF.
+- Backend `/admin` surface: operator identity, tenant list/detail, idempotent
+  suspend/resume, tenant-migration fan-out, filtered audit log, and runtime
+  health with cross-tenant queue depth. Every route requires `scope=platform`
+  and `is_platform_admin=true`; tenant tokens get `403 platform_required`.
+- Provisioning reuses the CLI service, records `tenant.provisioned_by_platform`,
+  and returns a step list the console shows with elapsed time.
+- Ops console is a dense, separate shell with no marketing chrome; tenant rows
+  and job counts come from the API.
+- Suspended tenants are blocked at three layers: login returns
+  `invalid_credentials`, tenant tokens and `X-Tenant-ID` requests return
+  `403 tenant_inactive`, and every app data request redirects to
+  `/app/ditangguhkan`, which renders the block page with retry and sign-out
+  actions instead of a generic error.
+- A platform admin also gets a "Konsol operator" link in the app menu, but it
+  still requires a separate operator sign-in.
+- 5 admin integration tests; suite now 27 unit and 53 integration.
+
+## 6. Next action — M9
 
 ```bash
 make up
 make test
 make test-integration
-git add -A && git commit -m "feat(m7): faskes app with session BFF"
+git add -A && git commit -m "feat(m8): ops console"
 git push origin main
 ```
 
-M8 is the ops console for platform operators: tenant list/detail, provisioning,
-health, and audit views. Stop after its gate and review before M9.
+M9 is hardening and operations: idempotency, retention jobs, structured logs,
+metrics/tracing, email verification and password reset, OpenAPI completeness,
+and the runbook. Stop after its gate and review before M10.
 
 ## 7. Open questions (non-blocking)
 

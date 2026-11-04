@@ -1,5 +1,7 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
+
 import { saveSession, type SessionHandle } from "@/lib/session";
 
 const BASE = (process.env.API_BASE_URL ?? "http://localhost:8000").replace(
@@ -125,7 +127,11 @@ export async function apiRequest<T>(
   init: Init = {},
 ): Promise<T> {
   const response = await apiResponse(handle, path, init);
-  if (!response.ok) throw await toApiError(response);
+  if (!response.ok) {
+    const error = await toApiError(response);
+    if (error.code === "tenant_inactive") redirect("/app/ditangguhkan");
+    throw error;
+  }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

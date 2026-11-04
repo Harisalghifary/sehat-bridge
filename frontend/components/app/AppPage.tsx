@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/AppShell";
+import { TenantSuspended } from "@/components/app/TenantSuspended";
 import { ApiError, apiRequest, SessionExpiredError } from "@/lib/api";
 import { appNav } from "@/lib/app-nav";
 import { readSession } from "@/lib/session";
@@ -30,6 +31,9 @@ export async function AppPage({
   } catch (error) {
     if (error instanceof SessionExpiredError) {
       redirect(`/masuk?next=${encodeURIComponent(next)}`);
+    }
+    if (error instanceof ApiError && error.code === "tenant_inactive") {
+      return <TenantSuspended tenant={session.data.tenant_slug} />;
     }
     if (error instanceof ApiError) {
       return (
@@ -66,6 +70,7 @@ export async function AppPage({
   return (
     <AppShell
       nav={nav}
+      isPlatformAdmin={me.is_platform_admin}
       user={{
         name: me.profile?.display_name || me.email,
         email: me.email,

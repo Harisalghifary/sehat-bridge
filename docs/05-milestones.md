@@ -289,11 +289,11 @@ Demo: log in as owner, upload, sync, then log in as member and hit a forbidden U
 **Goal:** the platform can be run without SQL.
 
 Tasks
-- [ ] `/ops/masuk` using platform login (tenant-less token)
-- [ ] `/ops/tenant` — list, detail, provision, suspend/resume
-- [ ] `/ops/audit` — filter by tenant/action/date, read-only table
-- [ ] `/ops/kesehatan` — dependency status, version, uptime, job queue depth
-- [ ] Guard: non-admin gets 403 and no nav entry
+- [x] `/ops/masuk` using platform login (tenant-less token)
+- [x] `/ops/tenant` — list, detail, provision, suspend/resume
+- [x] `/ops/audit` — filter by tenant/action/date, read-only table
+- [x] `/ops/kesehatan` — dependency status, version, uptime, job queue depth
+- [x] Guard: non-admin gets 403 and no nav entry
 
 Acceptance
 - Provision tenant #3 in under 30 seconds, with a visible step timeline

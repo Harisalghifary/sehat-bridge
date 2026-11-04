@@ -152,7 +152,7 @@ One span per request; child spans for DB transaction, Redis call, S3 presign.
 |---|---|---|
 | U-01 | Login with bad password | inline form error, no session, uniform copy |
 | U-02 | Mutating route handler without matching `Origin` | 403, no state change |
-| U-03 | Tenant member opens `/ops/tenant` | 403 page, no nav entry |
+| U-03 | Tenant member opens `/ops/tenant` | redirected to operator login; tenant token on `/admin/*` → `403 platform_required`, no nav entry |
 | U-04 | Upload 26 MB via the app | storage rejection surfaced, no orphan row |
 | U-05 | Admin demotes the owner | inline error, select reverts |
 | U-06 | Marketing pages with JS disabled | all content and links present |
@@ -165,6 +165,7 @@ One span per request; child spans for DB transaction, Redis call, S3 presign.
 | U-13 | `sitemap.xml`, `robots.txt`, OG image, JSON-LD | present and valid |
 | U-14 | Backend stopped | marketing still serves; `/app` shows retry boundary |
 | U-15 | Keyboard-only pass | focus order, drawer trap, skip link |
+| U-16 | Operator provisions, suspends, and resumes a tenant | step timeline, audit rows, app block page, login `invalid_credentials` |
 
 Component tests are not written for styling. Marketing copy is checked by a lint
 rule that fails on lorem ipsum, "TODO", or unlabelled numeric claims.

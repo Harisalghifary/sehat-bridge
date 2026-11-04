@@ -11,12 +11,13 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M7 — aplikasi faskes.** The private app is live at `/masuk`: login through a
-Redis-backed session BFF (tokens never reach the browser), dashboard, presigned
-file upload with progress, members and roles, SATUSEHAT credentials/test/sync,
-profile, and settings. The marketing site from M6 is unchanged. All app pages
-read data from the API; nothing is hard-coded. Ops console and screenshots
-follow in M8–M10 (see `docs/05-milestones.md`).
+**M8 — konsol operator.** Platform operators can run the service without SQL:
+tenant list/detail, provisioning with a visible step timeline, suspend/resume,
+a filtered read-only audit log, and dependency/queue health at `/ops`. The ops
+session is separate from the faskes session and tenant-less by construction; a
+suspended tenant sees a clear block page in the app while login still says
+`invalid_credentials`. Screenshots and the release demo follow in M9–M10 (see
+`docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema
@@ -48,9 +49,10 @@ make worker      # outbox worker on the Compose network
 make sweep       # release expired uploads
 ```
 
-Buka <http://localhost:8080> untuk aplikasi, <http://localhost:8080/masuk>
-untuk masuk ke aplikasi faskes, dan <http://localhost:8080/api/docs> untuk API.
-MinIO console di <http://localhost:9001>, Mailpit di <http://localhost:8025>.
+Buka <http://localhost:8080> untuk situs publik, <http://localhost:8080/masuk>
+untuk aplikasi faskes, <http://localhost:8080/ops/masuk> untuk konsol operator,
+dan <http://localhost:8080/api/docs> untuk API. MinIO console di
+<http://localhost:9001>, Mailpit di <http://localhost:8025>.
 
 Pengembangan lokal tanpa Docker untuk aplikasi/API:
 

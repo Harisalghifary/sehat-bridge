@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from redis.asyncio import Redis
 
+from app.admin.router import router as admin_router
 from app.auth.router import router as auth_router
 from app.config import get_settings
 from app.db.engine import make_engine, make_sessionmaker
@@ -39,6 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.engine = make_engine(settings.database_url)
     app.state.sessionmaker = make_sessionmaker(app.state.engine)
     app.state.redis = Redis.from_url(settings.redis_dsn, decode_responses=True)
+    app.state.started_at = time.time()
     logger.info("startup env=%s version=%s", settings.env, settings.version)
     try:
         yield
@@ -64,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(files_router)
     app.include_router(satusehat_router)
     app.include_router(leads_router)
+    app.include_router(admin_router)
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_middleware(TenantMiddleware)

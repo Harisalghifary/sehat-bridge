@@ -15,6 +15,7 @@ type NavItem = {
 };
 
 type Props = {
+  isPlatformAdmin?: boolean;
   user: {
     name: string;
     email: string;
@@ -29,7 +30,7 @@ type Props = {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export function AppShell({ user, nav, children }: Props) {
+export function AppShell({ user, nav, isPlatformAdmin, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -151,6 +152,14 @@ export function AppShell({ user, nav, children }: Props) {
                   {user.tenantSlug} · {roleLabel(user.role)}
                 </p>
               </div>
+              {isPlatformAdmin ? (
+                <Link
+                  href="/ops/tenant"
+                  className="block rounded px-3 py-2 text-sm font-medium text-[var(--brand-ink)] hover:bg-[var(--brand-weak)]"
+                >
+                  Konsol operator
+                </Link>
+              ) : null}
               <Link
                 href="/app/profil"
                 className="block rounded px-3 py-2 text-sm hover:bg-[var(--bg-alt)]"

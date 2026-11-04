@@ -158,6 +158,18 @@ async def get_current_user(
     )
 
 
+async def require_platform_admin(
+    user: AuthUser = Depends(get_current_user),
+) -> AuthUser:
+    if user.scope != "platform" or not user.is_platform_admin:
+        raise AppError(
+            status=403,
+            code="platform_required",
+            title="Platform operator access required",
+        )
+    return user
+
+
 def require_role(*roles: str) -> Callable[..., Any]:
     async def dependency(user: AuthUser = Depends(get_current_user)) -> AuthUser:
         if user.scope != "tenant" or user.role not in roles:

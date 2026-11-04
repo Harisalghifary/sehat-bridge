@@ -168,10 +168,15 @@ a browser request.
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/admin/tenants` | `{ "slug": "faskes-x", "name": "…", "owner_email": "…" }` → 201 |
+| GET | `/admin/me` | operator identity; membership is always `null` |
+| POST | `/admin/tenants` | `{ "slug": "faskes-x", "name": "…", "owner_email": "…", "password": "…" }` → 201 with provisioning steps |
 | GET | `/admin/tenants` | list with status and member counts |
-| POST | `/admin/tenants/{slug}/suspend` / `/resume` | operator action, audited |
-| POST | `/admin/migrations/tenants` | fan-out run, returns per-tenant results |
+| GET | `/admin/tenants/{slug}` | detail plus active and failed job counts |
+| POST | `/admin/tenants/{slug}/suspend` / `/resume` | idempotent operator action, audited |
+| GET | `/admin/audit` | filters `tenant`, `action`, `created_from`, `created_to`; cursor-free `limit`/`offset` |
+| GET | `/admin/audit/actions` | distinct actions for the filter dropdown |
+| GET | `/admin/health` | dependencies, version, uptime, tenant counts, queue depth |
+| POST | `/admin/migrations/tenants` | fan-out run, returns per-tenant applied migrations and writes an audit row |
 
 Tenant creation is also available as `make tenant`, which calls the same service
 so the two paths cannot diverge.
