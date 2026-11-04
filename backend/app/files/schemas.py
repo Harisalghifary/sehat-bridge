@@ -49,3 +49,9 @@ class FileList(BaseModel):
 class DownloadResponse(BaseModel):
     url: str
     expires_in: int
+
+
+class FileUsage(BaseModel):
+    files: int
+    used_bytes: int
+    quota_bytes: int

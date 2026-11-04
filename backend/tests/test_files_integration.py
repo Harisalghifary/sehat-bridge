@@ -350,6 +350,28 @@ async def test_quota_is_reserved_at_presign(
     assert second.json()["code"] == "quota_exceeded"
 
 
+async def test_usage_counts_active_files(
+    api: AsyncClient, tenant: tuple[TenantContext, str]
+) -> None:
+    current, owner_email = tenant
+    tokens = await _login(api, current, owner_email)
+    headers = _auth(str(tokens["access_token"]), current.slug)
+    owner_id = UUID(str((await api.get("/api/v1/users/me", headers=headers)).json()["id"]))
+    file_id = await _insert_file(current, owner_id, size=1234)
+
+    usage = await api.get("/api/v1/files/usage", headers=headers)
+    assert usage.status_code == 200
+    body = usage.json()
+    assert body["files"] == 1
+    assert body["used_bytes"] == 1234
+    assert body["quota_bytes"] == 1024 * 1024 * 1024
+
+    await api.delete(f"/api/v1/files/{file_id}", headers=headers)
+    after = (await api.get("/api/v1/files/usage", headers=headers)).json()
+    assert after["files"] == 0
+    assert after["used_bytes"] == 0
+
+
 async def test_list_pagination_and_member_scope(
     api: AsyncClient, tenant: tuple[TenantContext, str]
 ) -> None:

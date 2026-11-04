@@ -1,8 +1,8 @@
 # 00 — Handoff & Session Compact
 
-Last updated: 2026-11-04
-Status: **M6 complete — marketing site verified**
-Next action: **M7 (faskes app), after your go-ahead**
+Last updated: 2026-11-05
+Status: **M7 complete — faskes app verified**
+Next action: **M8 (ops console), after your go-ahead**
 
 ## 1. What this project is
 
@@ -194,18 +194,49 @@ data model — not a UI addition.
 - Lighthouse mobile on the running stack: Performance 98, Accessibility 100,
   SEO 100, CLS 0. All six content pages also score 100 for accessibility/SEO.
 
-## 6. Next action — M7
+### M7 — faskes app
+
+- Session BFF: `POST/DELETE /api/session`, refresh-once proxy, presigned upload
+  proxy, signed `__Host-sb_sid` cookie, Redis session with a 30-minute sliding
+  TTL, and `middleware.ts` guards for `/app` and `/ops`.
+- Server API client maps problem+json to typed errors, refreshes access tokens
+  once on `401`, saves the rotated refresh token, and redirects to
+  `/masuk?next=…` only when the session is truly gone.
+- App shell: role-filtered sidebar, tenant badge, user menu, breadcrumbs,
+  focus-trapped mobile drawer, and a service-readiness banner sourced from
+  `/health/ready`.
+- Screens: `/masuk`, `/daftar`, `/lupa-sandi`, `/app/dasbor`, `/app/berkas`,
+  `/app/anggota`, `/app/integrasi`, `/app/profil`, `/app/pengaturan`.
+- Files: drag/drop presigned POST with progress, cancel, readable failures,
+  complete verification, short-lived download, and two-step delete.
+- Members: owner/admin role changes, `409 last_owner` inline message, and a
+  copy-invitation action. Member screens redirect to an explicit 403 view and
+  the API still returns `403`.
+- Integration: encrypted credentials, test connection, enqueue org/patient
+  syncs, live job polling, and expandable error detail.
+- Profile: display name, IANA timezone, and avatar upload through the same
+  presigned file flow. Settings: locale/timezone display and sign-out-all.
+- Cross-checked live: fresh login, upload → complete → download byte match,
+  sync → worker result, token refresh after a corrupted access token, member
+  nav and API denial, and no JWT in HTML or container logs.
+- **Build note:** `app/app/layout.tsx` was hoisted over sibling route groups by
+  Next 15.5 in the Linux/standalone build, leaking the app shell into marketing
+  pages. The shell now lives in `components/app/AppPage.tsx` and is applied
+  explicitly per private page; marketing stays clean with or without a session.
+- 1 new file-usage integration test; suite now 27 unit and 48 integration.
+
+## 6. Next action — M8
 
 ```bash
 make up
 make test
 make test-integration
-git add -A && git commit -m "feat(m6): marketing site and public lead capture"
+git add -A && git commit -m "feat(m7): faskes app with session BFF"
 git push origin main
 ```
 
-M7 is the faskes app: cookie session BFF, login, dashboard, files, members,
-integration, and profile pages. Stop after its gate and review before M8.
+M8 is the ops console for platform operators: tenant list/detail, provisioning,
+health, and audit views. Stop after its gate and review before M9.
 
 ## 7. Open questions (non-blocking)
 

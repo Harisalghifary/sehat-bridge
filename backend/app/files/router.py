@@ -21,6 +21,7 @@ from app.files.schemas import (
     DownloadResponse,
     FileList,
     FileOut,
+    FileUsage,
     PresignUpload,
     PresignUploadRequest,
     PresignUploadResponse,
@@ -267,6 +268,35 @@ async def complete_upload(
     )
 
     return file_out(updated)
+
+
+@router.get("/usage", response_model=FileUsage, summary="Tenant storage usage")
+async def file_usage(
+    user: AuthUser = Depends(get_current_user),
+    session: AsyncSession = Depends(tenant_db),
+) -> FileUsage:
+    _tenant_of(user)
+    row = (
+        (
+            await session.execute(
+                text(
+                    """
+                SELECT count(*) AS files,
+                       COALESCE(SUM(size_bytes), 0) AS used_bytes
+                  FROM files
+                 WHERE status <> 'deleted'
+                """
+                )
+            )
+        )
+        .mappings()
+        .one()
+    )
+    return FileUsage(
+        files=int(row["files"]),
+        used_bytes=int(row["used_bytes"]),
+        quota_bytes=get_settings().quota_bytes,
+    )
 
 
 @router.get(

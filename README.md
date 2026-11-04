@@ -11,12 +11,12 @@ peran, dan integrasi SATUSEHAT dalam satu alur.
 
 ## Status
 
-**M6 — situs pemasaran.** The public site is live with original Indonesian
-copy: beranda, solusi, integrasi, demo, tentang, FAQ, and privasi. It uses the
-shared design tokens, `next/font`, per-page metadata and OG images, JSON-LD, a
-working lead form through the Next.js BFF, and the independence disclaimer.
-Lighthouse mobile: Performance 98, Accessibility 100, SEO 100. The faskes app
-follows in M7–M10 (see `docs/05-milestones.md`).
+**M7 — aplikasi faskes.** The private app is live at `/masuk`: login through a
+Redis-backed session BFF (tokens never reach the browser), dashboard, presigned
+file upload with progress, members and roles, SATUSEHAT credentials/test/sync,
+profile, and settings. The marketing site from M6 is unchanged. All app pages
+read data from the API; nothing is hard-coded. Ops console and screenshots
+follow in M8–M10 (see `docs/05-milestones.md`).
 
 ```bash
 make migrate     # public schema
@@ -48,9 +48,9 @@ make worker      # outbox worker on the Compose network
 make sweep       # release expired uploads
 ```
 
-Buka <http://localhost:8080> untuk aplikasi, <http://localhost:8080/api/docs>
-untuk API. MinIO console di <http://localhost:9001>, Mailpit di
-<http://localhost:8025>.
+Buka <http://localhost:8080> untuk aplikasi, <http://localhost:8080/masuk>
+untuk masuk ke aplikasi faskes, dan <http://localhost:8080/api/docs> untuk API.
+MinIO console di <http://localhost:9001>, Mailpit di <http://localhost:8025>.
 
 Pengembangan lokal tanpa Docker untuk aplikasi/API:
 

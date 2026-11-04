@@ -255,21 +255,21 @@ Demo: `open http://localhost:8080` and submit the demo form
 **Goal:** the working product a clinic uses daily, backed only by real data.
 
 Platform work
-- [ ] Session store (Redis), `__Host-sb_sid` cookie, `middleware.ts` guards
-- [ ] Route handlers: `POST/DELETE /api/session`, refresh, presign proxy
-- [ ] Server-side API client with problem+json → typed errors
-- [ ] 401 → refresh once → retry → redirect to `/masuk?next=…`
-- [ ] App shell: sidebar, tenant badge, mobile drawer, breadcrumbs, user menu
-- [ ] Empty, loading (skeletons), and error states for every screen
+- [x] Session store (Redis), `__Host-sb_sid` cookie, `middleware.ts` guards
+- [x] Route handlers: `POST/DELETE /api/session`, refresh, presign proxy
+- [x] Server-side API client with problem+json → typed errors
+- [x] 401 → refresh once → retry → redirect to `/masuk?next=…`
+- [x] App shell: sidebar, tenant badge, mobile drawer, breadcrumbs, user menu
+- [x] Empty, loading (skeletons), and error states for every screen
 
 Screens
-- [ ] `/masuk`, `/daftar`, `/lupa-sandi` with inline validation
-- [ ] `/app/dasbor` — quota, file count, last sync, health, recent activity
-- [ ] `/app/berkas` — drag-drop presigned upload with progress, list, download, delete
-- [ ] `/app/anggota` — table, role change with last-owner error, invitation copy
-- [ ] `/app/integrasi` — credentials, test connection, sync, job history polling
-- [ ] `/app/profil` — display name, timezone, avatar
-- [ ] `/app/pengaturan` — minimal: locale display, timezone, sign out all sessions
+- [x] `/masuk`, `/daftar`, `/lupa-sandi` with inline validation
+- [x] `/app/dasbor` — quota, file count, last sync, health, recent activity
+- [x] `/app/berkas` — drag-drop presigned upload with progress, list, download, delete
+- [x] `/app/anggota` — table, role change with last-owner error, invitation copy
+- [x] `/app/integrasi` — credentials, test connection, sync, job history polling
+- [x] `/app/profil` — display name, timezone, avatar
+- [x] `/app/pengaturan` — minimal: locale display, timezone, sign out all sessions
 
 Acceptance
 - Full journey from a fresh browser: login → upload → complete → sync → results
