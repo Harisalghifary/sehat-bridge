@@ -93,6 +93,14 @@ make screenshots-check      # regenerate to temp dir, pixel-diff vs committed
 It runs weekly and before a release tag, opening a PR with regenerated images
 rather than failing a feature branch.
 
+## 3.1 Language versions
+
+`README.md` is the Indonesian front door and stays the GitHub default.
+`README.en.md` is a full English mirror for external reviewers and contributors.
+Both start with a language switcher linking to the other file, and both must
+stay within the same structure and ≤ 220 lines. When a claim changes in one
+file, update the other in the same commit — no drift between languages.
+
 ## 4. README embedding
 
 ```markdown

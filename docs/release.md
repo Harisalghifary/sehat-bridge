@@ -18,6 +18,7 @@ Run from a clean checkout with Docker running. Do not tag until every box passes
 ## 2. Documentation
 
 - [ ] `README.md` is under 220 lines, disclaimer above the first screenshot.
+- [ ] `README.en.md` matches `README.md` in structure and claims.
 - [ ] `docs/api.md` regenerated from OpenAPI.
 - [ ] `docs/runbook.md`, `docs/quickstart.md`, `docs/satusehat.md`,
       `docs/design-review.md` reviewed.

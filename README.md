@@ -3,6 +3,8 @@
 **Platform multi-tenant untuk fasilitas kesehatan Indonesia** — berkas, anggota,
 peran, dan integrasi SATUSEHAT dalam satu alur.
 
+**Bahasa Indonesia** · [English](README.en.md)
+
 [![CI](https://github.com/Harisalghifary/sehat-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/Harisalghifary/sehat-bridge/actions/workflows/ci.yml)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB)
 ![Node 20](https://img.shields.io/badge/node-20-339933)
