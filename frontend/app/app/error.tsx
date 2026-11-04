@@ -1,8 +1,18 @@
 "use client";
 
+import { TenantSuspended } from "@/components/app/TenantSuspended";
 import { ButtonLink } from "@/components/site/ButtonLink";
 
-export default function AppError({ reset }: { error: Error; reset: () => void }) {
+export default function AppError({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  if (error.message === "Tenant is not active") {
+    return <TenantSuspended />;
+  }
   return (
     <div className="rounded-[10px] border border-[var(--line)] bg-white p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
