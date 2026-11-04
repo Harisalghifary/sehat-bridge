@@ -385,6 +385,29 @@ existing backend image.
 
 ---
 
+## ADR-019 — Separate ops session from the faskes session
+
+**Context:** `/ops` is used by platform operators whose token has no tenant
+(`tid: null`). Reusing the faskes cookie would either force tenant-less data
+into the tenant session shape or let an app session open operator pages. The
+backend must still reject tenant tokens on every admin route.
+
+**Decision:** Use a second signed cookie, `__Host-sb_ops`, with its own Redis
+record `sb:ops:{sid}` and the same 30-minute sliding TTL. `/api/ops/session`
+uses `/auth/platform-login`; `/api/ops/[...path]` proxies only `/admin/*`.
+`/api/session` and `/api/app/*` remain tenant-only. The admin API independently
+requires `scope=platform` and `is_platform_admin=true`.
+
+**Consequences:**
+- Signing out of the app does not sign out the ops console, and vice versa.
+- A tenant token cannot reach `/ops` even if the cookie is present elsewhere.
+- Operators need a second login; this is intentional and visible in the UI.
+- Both cookies share `SESSION_SECRET`; rotating that secret invalidates both.
+
+**Status:** Accepted.
+
+---
+
 ## Deferred decisions (explicitly not decided now)
 
 | Topic | Trigger to revisit |

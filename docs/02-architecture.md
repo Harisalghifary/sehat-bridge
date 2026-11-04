@@ -82,9 +82,9 @@ frontend/
   app/
     (marketing)/            /, /solusi, /integrasi, /demo, /tentang, /faq, /privasi
     (auth)/                 /masuk, /daftar, /lupa-sandi
-    (app)/app/              dasbor, berkas, integrasi, anggota, profil
-    (ops)/ops/              masuk, tenant, audit, kesehatan
-    api/                    route handlers: session, refresh, upload, lead proxy
+    app/app/                dasbor, berkas, integrasi, anggota, profil
+    app/ops/                masuk, tenant, audit, kesehatan
+    api/                    route handlers: session, ops session, refresh, upload, lead
   components/               UI kit (shadcn/ui) + marketing sections + app shells
   lib/                      api client, session, format, copy dictionary
   messages/id.ts            all copy, no strings in components
@@ -303,7 +303,8 @@ browser ──cookie(sid)──► Next.js server (RSC / route handler)
   they post to a Next.js route handler, which is the only place that touches the
   session.
 - Route handlers: `POST /api/session` (login), `DELETE /api/session` (logout),
-  `POST /api/session/refresh`, `POST /api/upload/presign`, `POST /api/lead`.
+  `POST /api/session/refresh`, `POST /api/upload/presign`, `POST /api/lead`,
+  plus `/api/ops/session` and the `/api/ops/[...path]` admin proxy.
 - On backend `401`, the server refreshes once with the stored refresh token and
   retries; on failure it clears the session and redirects to `/masuk?next=…`.
 - `middleware.ts` guards `/app/*` and `/ops/*` by cookie presence only; real
@@ -319,6 +320,11 @@ Redis record, 30-minute sliding TTL:
 ```
 
 Cookie: `__Host-sb_sid`, `Secure`, `HttpOnly`, `SameSite=Lax`, path `/`.
+
+Platform operators use a separate `__Host-sb_ops` cookie and `sb:ops:{sid}`
+record with `{ user_id, email, access_token, refresh_token, created_at }`.
+Keeping the two cookies separate prevents a tenant session from ever opening
+`/ops`, and the admin API independently requires `scope=platform`.
 
 ### 9.3 File uploads
 

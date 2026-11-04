@@ -38,6 +38,7 @@ onboarding.
 | 16 | Next.js single app (marketing + app + ops) | ADR-016 |
 | 17 | Reset `simple-websocket` into this project, keep history | ADR-017 |
 | 18 | Chainguard MinIO + S3-API bucket bootstrap (registry removal) | ADR-018 |
+| 19 | Separate `__Host-sb_ops` session for platform operators | ADR-019 |
 
 ## 3. Scope boundary
 
@@ -234,22 +235,24 @@ data model — not a UI addition.
 - `/ops/masuk`, `/ops/tenant`, `/ops/audit`, `/ops/kesehatan`, and a
   catch-all `/api/ops/[...path]` proxy with the same one-shot refresh and
   origin guard as the faskes BFF.
-- Backend `/admin` surface: operator identity, tenant list/detail, idempotent
-  suspend/resume, tenant-migration fan-out, filtered audit log, and runtime
-  health with cross-tenant queue depth. Every route requires `scope=platform`
-  and `is_platform_admin=true`; tenant tokens get `403 platform_required`.
+- Backend `/admin` surface: tenant list/detail, idempotent suspend/resume,
+  filtered audit log, distinct actions, and runtime health with cross-tenant
+  queue depth. Operator identity reuses `/users/me` with a platform token.
+  Every admin route requires `scope=platform`; tenant tokens get
+  `403 platform_required`.
 - Provisioning reuses the CLI service, records `tenant.provisioned_by_platform`,
   and returns a step list the console shows with elapsed time.
 - Ops console is a dense, separate shell with no marketing chrome; tenant rows
   and job counts come from the API.
 - Suspended tenants are blocked at three layers: login returns
-  `invalid_credentials`, tenant tokens and `X-Tenant-ID` requests return
-  `403 tenant_inactive`, and every app data request redirects to
-  `/app/ditangguhkan`, which renders the block page with retry and sign-out
-  actions instead of a generic error.
+  `invalid_credentials`, tenant tokens return `403 tenant_inactive`, and the
+  app error boundary renders a clear block page with sign-out instead of a
+  generic failure. Resume restores login and data immediately.
 - A platform admin also gets a "Konsol operator" link in the app menu, but it
   still requires a separate operator sign-in.
-- 5 admin integration tests; suite now 27 unit and 53 integration.
+- 4 admin integration tests; suite now 27 unit and 53 integration.
+- Live: provisioning took 1.01 s; suspend/resume, audit filter, and health
+  were verified against the Compose stack.
 
 ## 6. Next action — M9
 
