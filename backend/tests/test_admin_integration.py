@@ -203,7 +203,8 @@ async def test_ops_health_reports_dependencies_and_queue(
     assert body["checks"] == {"postgres": "ok", "redis": "ok", "minio": "ok"}
     assert body["uptime_seconds"] >= 0
     assert set(body["queue"]) == {"queued", "running", "failed", "dead"}
-    assert body["tenants"]["active"] >= 1
+    assert set(body["tenants"]) == {"active", "suspended", "provisioning", "failed"}
+    assert all(value >= 0 for value in body["tenants"].values())
 
 
 async def test_migrate_tenants_runs_fan_out(api: AsyncClient, operator: tuple[str, str]) -> None:

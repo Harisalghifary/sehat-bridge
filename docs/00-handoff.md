@@ -250,7 +250,7 @@ data model — not a UI addition.
   generic failure. Resume restores login and data immediately.
 - A platform admin also gets a "Konsol operator" link in the app menu, but it
   still requires a separate operator sign-in.
-- 4 admin integration tests; suite now 27 unit and 53 integration.
+- 5 admin integration tests; suite now 27 unit and 53 integration.
 - Live: provisioning took 1.01 s; suspend/resume, audit filter, and health
   were verified against the Compose stack.
 
